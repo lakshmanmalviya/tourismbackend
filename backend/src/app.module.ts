@@ -9,6 +9,7 @@ import { TagModule } from './tag/tag.module';
 import { PlaceModule } from './place/place.module';
 import { HeritageTagModule } from './heritage-tag/heritage-tag.module';
 import { HotelModule } from './hotel/hotel.module';
+import { ImageModule } from './image/image.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { HotelModule } from './hotel/hotel.module';
     PlaceModule,
     HeritageTagModule,
     HotelModule,
+    ImageModule,
   ],
 })
 
