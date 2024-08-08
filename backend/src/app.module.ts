@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { UserModule } from './user/user.module';
 import { HeritageModule } from './heritage/heritage.module';
+import { TagModule } from './tag/tag.module';
 import { PlaceModule } from './place/place.module';
 
 @Module({
@@ -21,6 +22,7 @@ import { PlaceModule } from './place/place.module';
     }),
     UserModule,
     HeritageModule,
+    TagModule,
     PlaceModule,
   ],
 })
