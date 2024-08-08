@@ -17,4 +17,5 @@ export class Heritage {
 
   @ManyToOne(() => Place, place => place.heritages)
   place: Place;
+  
 }
