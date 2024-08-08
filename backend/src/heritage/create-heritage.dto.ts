@@ -12,5 +12,4 @@ export class CreateHeritageDto {
   @IsNotEmpty()
   @IsNumber()
   placeId: number;
-  
 }

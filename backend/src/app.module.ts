@@ -6,6 +6,7 @@ import { DataSource } from 'typeorm';
 import { UserModule } from './user/user.module';
 import { HeritageModule } from './heritage/heritage.module';
 import { TagModule } from './tag/tag.module';
+import { PlaceModule } from './place/place.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { TagModule } from './tag/tag.module';
     UserModule,
     HeritageModule,
     TagModule,
+    PlaceModule,
   ],
 })
 
