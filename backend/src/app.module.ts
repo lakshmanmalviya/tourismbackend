@@ -10,6 +10,7 @@ import { PlaceModule } from './place/place.module';
 import { HeritageTagModule } from './heritage-tag/heritage-tag.module';
 import { HotelModule } from './hotel/hotel.module';
 import { ImageModule } from './image/image.module';
+import { QueryModule } from './query/query.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { ImageModule } from './image/image.module';
     HeritageTagModule,
     HotelModule,
     ImageModule,
+    QueryModule,
   ],
 })
 
