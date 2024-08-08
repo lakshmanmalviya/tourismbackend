@@ -8,6 +8,7 @@ import { HeritageModule } from './heritage/heritage.module';
 import { TagModule } from './tag/tag.module';
 import { PlaceModule } from './place/place.module';
 import { HeritageTagModule } from './heritage-tag/heritage-tag.module';
+import { HotelModule } from './hotel/hotel.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { HeritageTagModule } from './heritage-tag/heritage-tag.module';
     TagModule,
     PlaceModule,
     HeritageTagModule,
+    HotelModule,
   ],
 })
 
