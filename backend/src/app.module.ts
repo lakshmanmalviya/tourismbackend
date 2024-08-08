@@ -3,8 +3,6 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
-import { UserModule } from './user/user.module';
-import { HeritageModule } from './heritage/heritage.module';
 
 @Module({
   imports: [
@@ -18,8 +16,6 @@ import { HeritageModule } from './heritage/heritage.module';
       autoLoadEntities: true,
       synchronize: true,
     }),
-    UserModule,
-    HeritageModule,
   ],
 })
 
