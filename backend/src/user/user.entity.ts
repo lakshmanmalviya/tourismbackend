@@ -32,10 +32,10 @@ export class User {
 
   @Column({ type: 'enum', enum: Role, default: Role.PROVIDER })
   @IsEnum(Role)
-  roles: Role[];
+  roles: Role;
   
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  token: string | null;
+  @Column({ nullable: true })
+  token?: string;
 
   @Column({ default: false })
   isDeleted: boolean;

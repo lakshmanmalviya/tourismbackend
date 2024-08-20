@@ -12,6 +12,7 @@ import { HotelModule } from './hotel/hotel.module';
 import { ImageModule } from './image/image.module';
 import { QueryModule } from './query/query.module';
 
+
 @Module({
   imports: [
     TypeOrmModule.forRoot({
