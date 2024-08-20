@@ -3,7 +3,7 @@ import { EntityType } from './image.entity';
 
 export class CreateImageDto {
   @IsNotEmpty()
-  @IsNumber()
+  @IsString()
   publicID: string;
 
   @IsNotEmpty()

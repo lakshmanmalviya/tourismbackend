@@ -11,6 +11,7 @@ import { HeritageTagModule } from './heritage-tag/heritage-tag.module';
 import { HotelModule } from './hotel/hotel.module';
 import { ImageModule } from './image/image.module';
 import { QueryModule } from './query/query.module';
+import { AuthModule } from './auth/auth.module';
 
 
 @Module({
@@ -33,6 +34,7 @@ import { QueryModule } from './query/query.module';
     HotelModule,
     ImageModule,
     QueryModule,
+    AuthModule,
   ],
 })
 
