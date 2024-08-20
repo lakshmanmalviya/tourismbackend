@@ -15,7 +15,6 @@ export class Heritage {
   @Column({ default: false })
   isDeleted: boolean;
 
-  @ManyToOne(() => Place, place => place.heritages)
+  @ManyToOne(() => Place)
   place: Place;
-  
 }
