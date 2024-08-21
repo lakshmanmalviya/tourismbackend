@@ -1,5 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
-import { User } from '../user/user.entity';
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 export enum QueryStatus {
   SEEN = 'SEEN',
@@ -23,7 +22,4 @@ export class Query {
 
   @Column({ default: false })
   isDeleted: boolean;
-
-  @ManyToOne(() => User)
-  user: User;
 }
