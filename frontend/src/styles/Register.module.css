@@ -8,12 +8,6 @@
   background-color: #f9f9f9;
 }
 
-.heading {
-  text-align: center;
-  font-size: 24px;
-  margin-bottom: 20px;
-}
-
 .formGroup {
   margin-bottom: 20px;
 }
@@ -32,10 +26,43 @@
   font-size: 16px;
 }
 
+.heading {
+  text-align: center;
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.link {
+  display: block;
+  text-align: center;
+  margin-top: 20px;
+  color: #0070f3;
+  text-decoration: none;
+  font-size: 16px;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
 .error {
   color: red;
   margin-top: 8px;
   font-size: 14px;
+}
+
+.passwordRules {
+  margin-top: 8px;
+  font-size: 14px;
+}
+
+.rule {
+  color: red;
+  margin-bottom: 4px;
+}
+
+.rule.valid {
+  color: green;
 }
 
 .button {
@@ -51,17 +78,4 @@
 
 .button:hover {
   background-color: #005bb5;
-}
-
-.link {
-  display: block;
-  text-align: center;
-  margin-top: 20px;
-  color: #0070f3;
-  text-decoration: none;
-  font-size: 16px;
-}
-
-.link:hover {
-  text-decoration: underline;
 }
