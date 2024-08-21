@@ -1,5 +1,5 @@
 import { IsNotEmpty, IsString, MinLength, Matches, IsEnum, IsOptional } from 'class-validator';
-import { Role } from './roles.enum';
+import { Role } from '../role/roles.enum';
 
 export class CreateUserDto {
   @IsNotEmpty()
@@ -26,5 +26,5 @@ export class CreateUserDto {
 
   @IsOptional()
   @IsEnum(Role, { each: true, message: 'Invalid role' })
-  roles?: Role;
+  role?: Role;
 }

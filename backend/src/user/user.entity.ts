@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
-import { Role } from './roles.enum';
+import { Role } from '../role/roles.enum';
 import {
     IsNotEmpty,
     IsString,
@@ -32,10 +32,7 @@ export class User {
 
   @Column({ type: 'enum', enum: Role, default: Role.PROVIDER })
   @IsEnum(Role)
-  roles: Role;
-  
-  @Column({ nullable: true })
-  token?: string;
+  role: Role;
 
   @Column({ default: false })
   isDeleted: boolean;
