@@ -3,7 +3,8 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { AllExceptionsFilter } from './Filter/all-exception.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-
+import { CustomResponseInterceptor } from './common/custom-response.Interceptor';
+import * as cookieParser from 'cookie-parser';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
@@ -22,6 +23,14 @@ async function bootstrap() {
 
   app.useGlobalFilters(new AllExceptionsFilter());
 
+  app.useGlobalInterceptors(new CustomResponseInterceptor());
+  
+  app.enableCors({
+    origin: 'http://localhost:3001',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true, 
+  });
+  app.use(cookieParser());
   await app.listen(5001);
 }
 bootstrap();

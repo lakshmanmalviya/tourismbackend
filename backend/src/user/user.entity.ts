@@ -18,7 +18,7 @@ export class User {
   @Matches(/^[a-zA-Z\s]+$/, {message: 'Name must contain only alphabets'})
   @Column({ type: 'varchar', length: 255})
   @MinLength(3)
-  fullName: string;
+  username: string;
 
   @Column({ type: 'varchar', length: 255, unique: true })
   @IsNotEmpty()
