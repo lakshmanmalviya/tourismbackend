@@ -1,10 +1,18 @@
-import  { useState, useEffect } from "react";
-import { useFormik } from "formik";
-import * as Yup from "yup";
-import styles from "../styles/Register.module.css";
-import { pawdRegExp } from "@/utils/utils";
+import { useEffect, useState } from 'react';
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
+import { registerStart } from '../Redux/slices/authSlice';
+import { pawdRegExp } from '@/utils/utils';
+import styles from '../styles/Register.module.css';
+import { toast } from 'react-toastify';  
+import 'react-toastify/dist/ReactToastify.css'; 
+import { useAppDispatch, useAppSelector } from '../hooks/hook'; 
 
-const Register = ({ toggleForm }: { toggleForm: () => void }) => {
+
+const Register = ({ toggleForm, onSuccess }: { toggleForm: () => void, onSuccess: () => void }) => {
+  const dispatch = useAppDispatch();
+  const { isAuthenticated, error } = useAppSelector((state) => state.auth); 
+
   const [passwordRules, setPasswordRules] = useState({
     minLength: false,
     hasLetter: false,
@@ -12,27 +20,41 @@ const Register = ({ toggleForm }: { toggleForm: () => void }) => {
     hasSpecialChar: false,
   });
 
+  const [successfullyRegistered, setSuccessfullyRegistered] = useState(false);
+
   const formik = useFormik({
     initialValues: {
-      email: "",
-      username: "",
-      password: "",
+      username: '',
+      email: '',
+      password: '',
     },
     validationSchema: Yup.object({
       email: Yup.string()
-        .email("Invalid email address")
-        .required("Email is required"),
+        .email('Invalid email address')
+        .required('Email is required'),
       username: Yup.string()
-        .min(4, "Username must be at least 4 characters")
-        .required("Username is required"),
+        .min(4, 'Username must be at least 4 characters')
+        .required('Username is required'),
       password: Yup.string()
-        .matches(pawdRegExp, "Password must meet all the requirements")
-        .required("Password is required"),
+        .matches(pawdRegExp, 'Password must meet all the requirements')
+        .required('Password is required'),
     }),
     onSubmit: (values) => {
-      alert(JSON.stringify(values, null, 2));
+      dispatch(registerStart(values));
     },
   });
+
+  useEffect(() => {
+    if (isAuthenticated && !successfullyRegistered) {
+      toast.success('Registration successful!');
+      setSuccessfullyRegistered(true);
+      onSuccess(); 
+    }
+
+    if (error) {
+      toast.error(`Registration failed: ${error}`);
+    }
+  }, [isAuthenticated, error, successfullyRegistered, onSuccess]);
 
   useEffect(() => {
     const { password } = formik.values;
@@ -56,7 +78,7 @@ const Register = ({ toggleForm }: { toggleForm: () => void }) => {
             id="username"
             type="text"
             className={styles.input}
-            {...formik.getFieldProps("username")}
+            {...formik.getFieldProps('username')}
           />
           {formik.touched.username && formik.errors.username ? (
             <div className={styles.error}>{formik.errors.username}</div>
@@ -71,7 +93,7 @@ const Register = ({ toggleForm }: { toggleForm: () => void }) => {
             id="email"
             type="email"
             className={styles.input}
-            {...formik.getFieldProps("email")}
+            {...formik.getFieldProps('email')}
           />
           {formik.touched.email && formik.errors.email ? (
             <div className={styles.error}>{formik.errors.email}</div>
@@ -86,7 +108,7 @@ const Register = ({ toggleForm }: { toggleForm: () => void }) => {
             id="password"
             type="password"
             className={styles.input}
-            {...formik.getFieldProps("password")}
+            {...formik.getFieldProps('password')}
           />
           {formik.touched.password && formik.errors.password ? (
             <div className={styles.error}>{formik.errors.password}</div>
@@ -95,28 +117,28 @@ const Register = ({ toggleForm }: { toggleForm: () => void }) => {
           <div className={styles.passwordRules}>
             <div
               className={`${styles.rule} ${
-                passwordRules.minLength ? styles.valid : ""
+                passwordRules.minLength ? styles.valid : ''
               }`}
             >
               • At least 8 characters
             </div>
             <div
               className={`${styles.rule} ${
-                passwordRules.hasLetter ? styles.valid : ""
+                passwordRules.hasLetter ? styles.valid : ''
               }`}
             >
               • At least one letter (A-Z or a-z)
             </div>
             <div
               className={`${styles.rule} ${
-                passwordRules.hasNumber ? styles.valid : ""
+                passwordRules.hasNumber ? styles.valid : ''
               }`}
             >
               • At least one number (0-9)
             </div>
             <div
               className={`${styles.rule} ${
-                passwordRules.hasSpecialChar ? styles.valid : ""
+                passwordRules.hasSpecialChar ? styles.valid : ''
               }`}
             >
               • At least one special character (@$!%*#?&)
@@ -137,4 +159,3 @@ const Register = ({ toggleForm }: { toggleForm: () => void }) => {
 };
 
 export default Register;
-

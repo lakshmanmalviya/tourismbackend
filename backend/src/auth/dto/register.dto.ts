@@ -11,7 +11,7 @@ export default class RegisterDto {
   @IsString()
   @Matches(/^[a-zA-Z\s]+$/, { message: 'Name must contain only alphabets' })
   @MinLength(3)
-  fullName: string;
+  username: string;
 
   @IsNotEmpty()
   @IsString()

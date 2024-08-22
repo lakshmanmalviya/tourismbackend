@@ -1,11 +1,21 @@
-import { Controller, Post, Body, Res, Req } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Res,
+  Req,
+  HttpStatus,
+  Logger,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Response, Request } from 'express';
-import  RegisterDto  from './dto/register.dto';
+import RegisterDto from './dto/register.dto';
 import LoginDto from './dto/login.dto';
 
 @Controller('auth')
 export class AuthController {
+  private readonly logger = new Logger(AuthController.name);
+
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
@@ -13,19 +23,26 @@ export class AuthController {
     @Body() registerDto: RegisterDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { accessToken, refreshToken } = await this.authService.register(registerDto);
+    try {
+      const { accessToken, refreshToken } =
+        await this.authService.register(registerDto);
 
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      sameSite: 'strict',
-    });
+      res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        sameSite: 'strict',
+      });
 
-    res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      sameSite: 'strict',
-    });
+      res.cookie('accessToken', accessToken, {
+        httpOnly: true,
+        sameSite: 'strict',
+      });
 
-    return { accessToken };
+      return { message: 'Register successful' };
+    } catch (error) {
+      res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .send({ message: 'Registration failed' });
+    }
   }
 
   @Post('login')
@@ -33,19 +50,25 @@ export class AuthController {
     @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { accessToken, refreshToken } = await this.authService.login(loginDto);
+    try {
+      const { accessToken, refreshToken } =
+        await this.authService.login(loginDto);
 
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      sameSite: 'strict',
-    });
+      res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        sameSite: 'strict',
+      });
 
-    res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      sameSite: 'strict',
-    });
-
-    return { accessToken };
+      res.cookie('accessToken', accessToken, {
+        httpOnly: true,
+        sameSite: 'strict',
+      });
+      return { message: 'Login successful' };
+    } catch (error) {
+      res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .send({ message: 'Login failed' });
+    }
   }
 
   @Post('refresh-token')
@@ -53,23 +76,33 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const refreshToken = req.cookies['refreshToken'];
-    const { accessToken, newRefreshToken } = await this.authService.refreshAccessToken(refreshToken);
+    try {
+      const refreshToken = req.cookies['refreshToken'];
 
-    res.cookie('refreshToken', newRefreshToken, {
-      httpOnly: true,
-      sameSite: 'strict',
-    });
+      if (!refreshToken) {
+        res
+          .status(HttpStatus.UNAUTHORIZED)
+          .send({ message: 'No refresh token provided' });
+        return;
+      }
 
-    res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      sameSite: 'strict',
-    });
+      const { accessToken, newRefreshToken } =
+        await this.authService.refreshAccessToken(refreshToken);
 
-    return;
+      res.cookie('refreshToken', newRefreshToken, {
+        httpOnly: true,
+        sameSite: 'strict',
+      });
+
+      res.cookie('accessToken', accessToken, {
+        httpOnly: true,
+        sameSite: 'strict',
+      });
+      return { message: 'Token refreshed successfully' };
+    } catch (error) {
+      res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .send({ message: 'Token refresh failed' });
+    }
   }
-
 }
-
-
-
