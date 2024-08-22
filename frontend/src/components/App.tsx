@@ -39,7 +39,7 @@ const App = () => {
           onClose={handleClose}
           aria-labelledby="modal-modal-title"
           aria-describedby="modal-modal-description"
-          sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }} // Center the modal
+          sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
         >
           <Box ref={modalRef} sx={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', boxShadow: 24 }}>
             {isRegister ? (
