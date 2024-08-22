@@ -5,6 +5,9 @@ import { AllExceptionsFilter } from './Filter/all-exception.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { CustomResponseInterceptor } from './common/custom-response.Interceptor';
 import * as cookieParser from 'cookie-parser';
+import { join } from 'path';
+import * as multer from 'multer';
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
@@ -23,6 +26,8 @@ async function bootstrap() {
 
   app.useGlobalFilters(new AllExceptionsFilter());
 
+   app.use(multer({ dest: join(__dirname, '..', 'uploads') }).single('file'));
+
   app.useGlobalInterceptors(new CustomResponseInterceptor());
   
   app.enableCors({
@@ -30,7 +35,10 @@ async function bootstrap() {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true, 
   });
+
   app.use(cookieParser());
+  
   await app.listen(5001);
 }
 bootstrap();
+
