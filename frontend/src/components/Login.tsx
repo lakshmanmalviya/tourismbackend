@@ -1,9 +1,18 @@
-import React from 'react';
+import { useEffect, useState } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import styles from '../styles/Login.module.css'
+import { loginStart } from '../Redux/slices/authSlice';
+import styles from '../styles/Login.module.css';
+import { toast } from 'react-toastify';  
+import 'react-toastify/dist/ReactToastify.css'; 
+import { useAppDispatch, useAppSelector } from '../hooks/hook'; 
+import { useRouter } from 'next/router'; 
 
-const Login = ({ toggleForm }: { toggleForm: () => void }) => {
+const Login = ({ toggleForm, onSuccess }: { toggleForm: () => void, onSuccess: () => void }) => {
+  const dispatch = useAppDispatch();
+  const { isAuthenticated, error } = useAppSelector((state) => state.auth); 
+  const router = useRouter(); 
+
   const formik = useFormik({
     initialValues: {
       email: '',
@@ -17,16 +26,29 @@ const Login = ({ toggleForm }: { toggleForm: () => void }) => {
         .required('Password is required'),
     }),
     onSubmit: (values) => {
-      alert(JSON.stringify(values, null, 2));
+      dispatch(loginStart(values));
     },
   });
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      toast.success('Login successful!');
+      onSuccess(); 
+    }
+
+    if (error) {
+      toast.error(`Login failed: ${error}`);
+    }
+  }, [isAuthenticated, error, onSuccess]);
 
   return (
     <div className={styles.formContainer}>
       <h2 className={styles.heading}>Login</h2>
       <form onSubmit={formik.handleSubmit}>
         <div className={styles.formGroup}>
-          <label htmlFor="email" className={styles.label}>Email</label>
+          <label htmlFor="email" className={styles.label}>
+            Email
+          </label>
           <input
             id="email"
             type="email"
@@ -39,7 +61,9 @@ const Login = ({ toggleForm }: { toggleForm: () => void }) => {
         </div>
 
         <div className={styles.formGroup}>
-          <label htmlFor="password" className={styles.label}>Password</label>
+          <label htmlFor="password" className={styles.label}>
+            Password
+          </label>
           <input
             id="password"
             type="password"
@@ -51,9 +75,11 @@ const Login = ({ toggleForm }: { toggleForm: () => void }) => {
           ) : null}
         </div>
 
-        <button type="submit" className={styles.button}>Login</button>
+        <button type="submit" className={styles.button}>
+          Login
+        </button>
       </form>
-      
+
       <a className={styles.link} onClick={toggleForm}>
         Don't have an account? Register
       </a>

@@ -18,18 +18,18 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto) {
-    const { fullName, email, password } = registerDto;
+    const { username, email, password } = registerDto;
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await this.userService.createUser({
-      fullName,
+      username,
       email,
       password: hashedPassword,
     });
 
     const accessTokenPayload = {
-      username: user.email,
+      email: user.email,
       sub: user.id,
       role: user.role,
     };
@@ -44,7 +44,10 @@ export class AuthService {
       expiresIn: '7d',
     });
 
-    return { accessToken, refreshToken };
+    return {
+      accessToken,
+      refreshToken,
+    };
   }
 
   async login(loginDto: LoginDto) {
@@ -56,11 +59,26 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const payload = { username: user.email, sub: user.id };
-    const accessToken = this.jwtService.sign(payload, { expiresIn: '10m' });
-    const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
+    const accessTokenPayload = {
+      email: user.email,
+      sub: user.id,
+      role: user.role,
+    };
+    
+    const refreshTokenPayload = { id: user.id };
 
-    return { accessToken, refreshToken };
+    const accessToken = this.jwtService.sign(accessTokenPayload, {
+      expiresIn: '10m',
+    });
+
+    const refreshToken = this.jwtService.sign(refreshTokenPayload, {
+      expiresIn: '7d',
+    });
+
+    return {
+      accessToken,
+      refreshToken,
+    };
   }
 
   async refreshAccessToken(refreshToken: string) {
