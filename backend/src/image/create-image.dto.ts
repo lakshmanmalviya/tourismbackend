@@ -1,20 +1,12 @@
-import { IsEnum, IsNotEmpty, IsNumber, IsString } from 'class-validator';
-import { EntityType } from './image.entity';
+import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
+import { EntityType } from '../types/entityType.enum';
 
 export class CreateImageDto {
-  @IsNotEmpty()
-  @IsString()
-  publicID: string;
-
-  @IsNotEmpty()
   @IsEnum(EntityType)
+  @IsNotEmpty()
   entityType: EntityType;
 
-  @IsNotEmpty()
-  @IsNumber()
-  entityId: number;
-
-  @IsNotEmpty()
   @IsString()
-  imageLink: string;
+  @IsNotEmpty()
+  entityId: string;
 }
