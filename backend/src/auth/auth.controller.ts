@@ -5,7 +5,6 @@ import {
   Res,
   Req,
   HttpStatus,
-  Logger,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Response, Request } from 'express';
@@ -14,8 +13,6 @@ import LoginDto from './dto/login.dto';
 
 @Controller('auth')
 export class AuthController {
-  private readonly logger = new Logger(AuthController.name);
-
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')

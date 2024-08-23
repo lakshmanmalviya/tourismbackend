@@ -1,14 +1,10 @@
-import {
-  Injectable,
-  ConflictException,
-  InternalServerErrorException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { UserService } from '../user/user.service';
 import RegisterDto from './dto/register.dto';
 import LoginDto from './dto/login.dto';
+import { Role } from 'src/types/roles.enum';
 
 @Injectable()
 export class AuthService {
@@ -18,7 +14,7 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto) {
-    const { username, email, password } = registerDto;
+    const { username, email, password, role } = registerDto;
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -26,6 +22,7 @@ export class AuthService {
       username,
       email,
       password: hashedPassword,
+      role: role || Role.PROVIDER,
     });
 
     const accessTokenPayload = {
@@ -64,7 +61,7 @@ export class AuthService {
       sub: user.id,
       role: user.role,
     };
-    
+
     const refreshTokenPayload = { id: user.id };
 
     const accessToken = this.jwtService.sign(accessTokenPayload, {
@@ -84,9 +81,13 @@ export class AuthService {
   async refreshAccessToken(refreshToken: string) {
     try {
       const payload = this.jwtService.verify(refreshToken, {
-        secret: process.env.JWT_SECRET,
+        secret: 'secretkey',
       });
-      const newPayload = { username: payload.username, sub: payload.sub };
+      const newPayload = {
+        username: payload.username,
+        sub: payload.sub,
+        role: payload.role,
+      };
       const accessToken = this.jwtService.sign(newPayload, {
         expiresIn: '10m',
       });

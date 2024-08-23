@@ -1,11 +1,13 @@
 import {
     Injectable,
     BadRequestException,
+    NotFoundException,
   } from '@nestjs/common';
   import { InjectRepository } from '@nestjs/typeorm';
   import { Repository } from 'typeorm';
   import { Place } from './place.entity';
   import { CreatePlaceDto } from './dto/create-place.dto';
+  import { UpdatePlaceDto } from './dto/update-place.dto'; // Assume this DTO exists
   import { ImageService } from '../image/image.service';
   import { EntityType } from 'src/types/entityType.enum';
   
@@ -41,6 +43,22 @@ import {
         return savedPlace;
       } catch (error) {
         throw new BadRequestException('Error creating place or uploading images');
+      }
+    }
+  
+    async updatePlace(id: number, updatePlaceDto: UpdatePlaceDto): Promise<Place> {
+      const place = await this.placeRepository.findOne({where: {id}});
+  
+      if (!place) {
+        throw new NotFoundException('Place not found');
+      }
+  
+      Object.assign(place, updatePlaceDto);
+  
+      try {
+        return await this.placeRepository.save(place);
+      } catch (error) {
+        throw new BadRequestException('Error updating place');
       }
     }
   }
