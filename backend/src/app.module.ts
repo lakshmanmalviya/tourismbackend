@@ -12,7 +12,9 @@ import { HotelModule } from './hotel/hotel.module';
 import { ImageModule } from './image/image.module';
 import { QueryModule } from './query/query.module';
 import { AuthModule } from './auth/auth.module';
-
+import { MulterModule } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 
 @Module({
   imports: [
@@ -26,6 +28,15 @@ import { AuthModule } from './auth/auth.module';
       autoLoadEntities: true,
       synchronize: true,
     }),
+    MulterModule.register({
+      storage: diskStorage({
+        destination: './uploads',
+        filename: (req, file, cb) => {
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          cb(null, `${file.fieldname}-${uniqueSuffix}${extname(file.originalname)}`);
+        },
+      }),
+    }),
     UserModule,
     HeritageModule,
     TagModule,
@@ -36,10 +47,9 @@ import { AuthModule } from './auth/auth.module';
     QueryModule,
     AuthModule,
   ],
+  controllers: [AppController],
+  providers: [AppService],
 })
-
 export class AppModule {
   constructor(private dataSource: DataSource) {}
 }
-
-
