@@ -61,5 +61,22 @@ import {
         throw new BadRequestException('Error updating place');
       }
     }
+  
+  async deletePlace(id: number): Promise<void> {
+    const place = await this.placeRepository.findOne({ where: { id } });
+  
+    if (!place) {
+      throw new NotFoundException(`Place with ID ${id} not found`);
+    }
+  
+    try {
+      await this.imageService.deleteImagesByEntity(id.toString());
+      await this.placeRepository.delete(id);
+    } catch (error) {
+      throw new BadRequestException(
+        'Error deleting place or associated images',
+      );
+    }
+  }
   }
   
