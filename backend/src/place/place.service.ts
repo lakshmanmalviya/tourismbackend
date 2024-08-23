@@ -7,9 +7,10 @@ import {
   import { Repository } from 'typeorm';
   import { Place } from './place.entity';
   import { CreatePlaceDto } from './dto/create-place.dto';
-  import { UpdatePlaceDto } from './dto/update-place.dto'; // Assume this DTO exists
+  import { UpdatePlaceDto } from './dto/update-place.dto'; 
   import { ImageService } from '../image/image.service';
   import { EntityType } from 'src/types/entityType.enum';
+import { Image } from 'src/image/image.entity';
   
   @Injectable()
   export class PlaceService {
@@ -18,7 +19,29 @@ import {
       private readonly placeRepository: Repository<Place>,
       private readonly imageService: ImageService,
     ) {}
+    async getPlaceWithImages(id: number): Promise<{ place: Place; images:Image[] }> {
+      const place = await this.placeRepository.findOne({ where: { id } });
   
+      if (!place) {
+        throw new NotFoundException(`Place with ID ${id} not found`);
+      }
+  
+      const images = await this.imageService.getImagesByEntity(id.toString());
+      return { place, images };
+    }
+
+    async getAllPlacesWithImages(): Promise<{ place: Place; images: Image[] }[]> {
+      const places = await this.placeRepository.find();
+  
+      const placesWithImages = await Promise.all(
+        places.map(async (place) => {
+          const images = await this.imageService.getImagesByEntity(place.id.toString());
+          return { place, images };
+        }),
+      );
+  
+      return placesWithImages;
+    }
     async createPlace(
       createPlaceDto: CreatePlaceDto,
       files: Express.Multer.File[],

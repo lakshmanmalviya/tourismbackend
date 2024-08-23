@@ -12,7 +12,11 @@ export class ImageService {
     @InjectRepository(Image)
     private readonly imageRepository: Repository<Image>,
   ) {}
-
+  async getImagesByEntity(entityId: string): Promise<Image[]> {
+    return this.imageRepository.find({
+      where: { entityId: entityId },
+    });
+  }
   async uploadImage(file: Express.Multer.File, createImageDto: CreateImageDto) {
     try {
       const uploadStream = cloudinary.uploader.upload_stream(
