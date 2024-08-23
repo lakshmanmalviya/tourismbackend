@@ -6,6 +6,9 @@ import {
   Body,
   BadRequestException,
   UseGuards,
+  Delete,
+  Param,
+  NotFoundException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ImageService } from './image.service';
@@ -15,7 +18,7 @@ import { AuthGuard } from '../auth/auth.guard';
 @Controller('images')
 export class ImageController {
   constructor(private readonly imageService: ImageService) {}
-
+  
   @UseGuards(AuthGuard)
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
@@ -37,6 +40,24 @@ export class ImageController {
       };
     } catch (error) {
       throw new BadRequestException('Error during image upload');
+    }
+  }
+
+  @UseGuards(AuthGuard)
+  @Delete(':publicID')
+  async deleteImage(@Param('publicID') publicID: string) {
+    try {
+      await this.imageService.deleteImage(publicID);
+
+      return {
+        statusCode: 200,
+        message: 'Image deleted successfully',
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(error.message);
+      }
+      throw new BadRequestException('Error during image deletion');
     }
   }
 }

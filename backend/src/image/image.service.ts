@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Image } from './image.entity';
@@ -8,6 +8,7 @@ import cloudinary from '../config/cloudinary.config';
 
 @Injectable()
 export class ImageService {
+
   constructor(
     @InjectRepository(Image)
     private readonly imageRepository: Repository<Image>,
@@ -40,5 +41,19 @@ export class ImageService {
       throw error;
     }
   }
-  
+
+  async deleteImage(publicID: string): Promise<void> {
+    try {
+      const image = await this.imageRepository.findOne({ where: { publicID } });
+
+      if (!image) {
+        throw new NotFoundException('Image not found');
+      }
+
+      await cloudinary.uploader.destroy(publicID);
+      await this.imageRepository.update(image.id, { isDeleted: true });
+    } catch (error) {
+      throw error;
+    }
+  }
 }
