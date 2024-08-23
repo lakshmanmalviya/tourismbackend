@@ -10,6 +10,7 @@ import {
     Param,
     Delete,
     NotFoundException,
+    Get,
   } from '@nestjs/common';
   import { FilesInterceptor } from '@nestjs/platform-express';
   import { PlaceService } from './place.service';
@@ -22,6 +23,39 @@ import {
   @Controller('places')
   export class PlaceController {
     constructor(private readonly placeService: PlaceService) {}
+
+    @Get()
+    async getAllPlacesWithImages() {
+      try {
+        const placesWithImages = await this.placeService.getAllPlacesWithImages();
+        return {
+          statusCode: 200,
+          message: 'All places fetched successfully',
+          data: placesWithImages,
+        };
+      } catch (error) {
+        throw new BadRequestException('Error fetching places details');
+      }
+    }
+  @Get(':id')
+  async getPlaceWithImages(@Param('id') id: number) {
+    try {
+      const { place, images } = await this.placeService.getPlaceWithImages(id);
+      return {
+        statusCode: 200,
+        message: 'Place fetched successfully',
+        data: {
+          place,
+          images,
+        },
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(error.message);
+      }
+      throw new BadRequestException('Error fetching place details');
+    }
+  }
   
     @UseGuards(AuthGuard, RolesGuard)
     @Roles(['ADMIN'])
