@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
-import { Role } from '../role/roles.enum';
+import { Role } from '../types/roles.enum';
 import {
     IsNotEmpty,
     IsString,
