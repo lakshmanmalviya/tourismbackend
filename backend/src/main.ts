@@ -5,8 +5,17 @@ import { AllExceptionsFilter } from './Filter/all-exception.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { CustomResponseInterceptor } from './common/custom-response.Interceptor';
 import * as cookieParser from 'cookie-parser';
+import * as multer from 'multer';
+import * as express from 'express';
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  app.use(express.json({ limit: '50mb' }));
+
+  app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+  app.use(cookieParser());
 
   const config = new DocumentBuilder()
     .setTitle('Tourism Website ')
@@ -19,18 +28,33 @@ async function bootstrap() {
 
   SwaggerModule.setup('api/docs', app, document);
 
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    }),
+  );
 
   app.useGlobalFilters(new AllExceptionsFilter());
 
   app.useGlobalInterceptors(new CustomResponseInterceptor());
-  
+
+  const upload = multer({
+    dest: './uploads',
+    limits: {
+      fileSize: 5 * 1024 * 1024,
+    },
+  });
+
+  app.use('/uploads', express.static('uploads'));
+
   app.enableCors({
     origin: 'http://localhost:3001',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true, 
+    credentials: true,
   });
-  app.use(cookieParser());
+
   await app.listen(5001);
 }
 bootstrap();

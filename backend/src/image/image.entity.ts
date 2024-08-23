@@ -1,10 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
-
-export enum EntityType {
-  PLACE = 'PLACE',
-  HOTEL = 'HOTEL',
-  HERITAGE = 'HERITAGE',
-}
+import { EntityType } from '../types/entityType.enum';
 
 @Entity()
 export class Image {
@@ -18,7 +13,7 @@ export class Image {
   entityType: EntityType;
 
   @Column()
-  entityId: number;
+  entityId: string;
 
   @Column()
   imageLink: string;
@@ -26,3 +21,5 @@ export class Image {
   @Column({ default: false })
   isDeleted: boolean;
 }
+
+export { EntityType };
