@@ -50,7 +50,7 @@ async function bootstrap() {
   app.use('/uploads', express.static('uploads'));
 
   app.enableCors({
-    origin: 'http://localhost:3001',
+    origin: 'http://localhost:3000',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
