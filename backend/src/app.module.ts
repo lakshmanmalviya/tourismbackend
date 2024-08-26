@@ -24,7 +24,7 @@ import { extname } from 'path';
       port: 3306,
       username: 'root',
       password: 'root',
-      database: 'Tourism',
+      database: 'tourism',
       autoLoadEntities: true,
       synchronize: true,
     }),
