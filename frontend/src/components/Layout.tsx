@@ -4,7 +4,7 @@ import Footer from "./Footer";
 
 const Layout = ({ children }: PropsWithChildren) => {
   return (
-    <div className="px-12">
+    <div>
       <Navbar />
       {children}
       <Footer />
