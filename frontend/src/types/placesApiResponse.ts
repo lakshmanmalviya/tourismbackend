@@ -1,3 +1,5 @@
+import { AxiosResponse } from "axios";
+
 export interface Image {
   id: number;
   publicID: string;
@@ -14,7 +16,7 @@ export interface Place {
   isDeleted: boolean;
 }
 
-export interface PlaceWithImages {
+export interface PlaceWithImages extends AxiosResponse {
   place: Place;
   images: Image[];
 }
@@ -25,7 +27,7 @@ export interface GetAllPlacesWithImagesResponse {
   error: string | null;
   timestamp: string;
   path: string;
-  data: PlaceWithImages[];
+  places: PlaceWithImages[];
 }
 
 export interface GetPlaceWithImagesResponse {
