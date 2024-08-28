@@ -19,6 +19,10 @@ import { Image } from 'src/image/image.entity';
       private readonly placeRepository: Repository<Place>,
       private readonly imageService: ImageService,
     ) {}
+
+    async getPlaceById(id: number) : Promise<Place> {
+      return await this.placeRepository.findOne({where: {id}})
+    }
     async getPlaceWithImages(id: number): Promise<{ place: Place; images:Image[] }> {
       const place = await this.placeRepository.findOne({ where: { id } });
   

@@ -9,6 +9,7 @@ import { ImageModule } from 'src/image/image.module';
 @Module({
   imports: [TypeOrmModule.forFeature([Place]), AuthModule, ImageModule],
   providers: [PlaceService],
-  controllers: [PlaceController]
+  controllers: [PlaceController],
+  exports: [PlaceService]
 })
 export class PlaceModule {}

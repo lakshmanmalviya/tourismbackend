@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToMany } from 'typeorm';
 import { Place } from '../place/place.entity';
 
 @Entity()
@@ -15,6 +15,9 @@ export class Heritage {
   @Column({ default: false })
   isDeleted: boolean;
 
-  @ManyToOne(() => Place)
+  @Column('json', { nullable: true })
+  tags: number[];
+
+  @ManyToOne(() => Place, place => place.id)
   place: Place;
 }
