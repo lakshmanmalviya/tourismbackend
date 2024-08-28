@@ -19,8 +19,11 @@ export class Hotel {
   @Column('text')
   description: string;
 
+  @Column({nullable: true})
+  websiteLink?: string;
+
   @Column()
-  websiteLink: string;
+  contact?: string;
 
   @Column()
   hotelStarRating: number;
@@ -43,9 +46,9 @@ export class Hotel {
   @Column({ default: false })
   isDeleted: boolean;
 
-  @ManyToOne(() => Place)
+  @ManyToOne(() => Place, place => place.id)
   place: Place;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, user => user.id)
   user: User;
 }

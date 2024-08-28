@@ -54,7 +54,7 @@ export class ImageService {
       }
 
       await cloudinary.uploader.destroy(publicID);
-      await this.imageRepository.update(image.id, { isDeleted: true });
+      await this.imageRepository.delete(image.id);
     } catch (error) {
       throw error;
     }

@@ -104,6 +104,7 @@ import {
     }
   
     @UseGuards(AuthGuard, RolesGuard)
+    @Roles(['ADMIN'])
     @Delete(':id')
     async deletePlace(@Param('id') id: number) {
       try {
