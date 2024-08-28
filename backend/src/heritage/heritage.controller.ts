@@ -8,6 +8,8 @@ import {
   BadRequestException,
   Param,
   Patch,
+  Delete,
+  NotFoundException,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { HeritageService } from './heritage.service';
@@ -70,6 +72,24 @@ export class HeritageController {
       };
     } catch (error) {
       throw new BadRequestException('Error updating heritage');
+    }
+  }
+
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(['ADMIN'])
+  @Delete(':id')
+  async remove(@Param('id') id: number) {
+    try {
+      await this.heritageService.remove(id);
+      return {
+        statusCode: 200,
+        message: 'Heritage and associated images deleted successfully',
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(error.message);
+      }
+      throw new BadRequestException('Error deleting heritage');
     }
   }
 }
