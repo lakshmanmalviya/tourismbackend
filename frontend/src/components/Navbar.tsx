@@ -8,6 +8,7 @@ import Button from "@mui/material/Button";
 import Register from "./Register";
 import Login from "./Login";
 import Modal from "@mui/material/Modal";
+import { ToastContainer } from "react-toastify";
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
@@ -143,6 +144,7 @@ const Navbar = () => {
           <Button onClick={handleOpen} className="bg-green-500 text-white px-6 py-2 rounded-full hover:bg-green-600 transition">Register / Login</Button>
         </div>
       )}
+      <ToastContainer/>
     </header>
   );
 };

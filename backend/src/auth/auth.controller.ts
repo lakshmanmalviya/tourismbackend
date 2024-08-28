@@ -95,7 +95,7 @@ export class AuthController {
         httpOnly: true,
         sameSite: 'strict',
       });
-      return { message: 'Token refreshed successfully', statusCode: 200, };
+      return { message: 'Token refreshed successfully', statusCode: 201, };
     } catch (error) {
       res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
