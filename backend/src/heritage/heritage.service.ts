@@ -1,20 +1,18 @@
-import {
-  Injectable,
-  BadRequestException,
-  NotFoundException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Brackets, Repository } from 'typeorm';
 import { Heritage } from './heritage.entity';
 import { CreateHeritageDto } from './dto/create-heritage.dto';
 import { UpdateHeritageDto } from './dto/update-heritage.dto';
 import { ImageService } from '../image/image.service';
 import { EntityType } from 'src/types/entityType.enum';
+import { Image } from 'src/image/image.entity';
 import { PlaceService } from 'src/place/place.service';
 
 @Injectable()
 export class HeritageService {
+  private readonly logger = new Logger(HeritageService.name); 
+
   constructor(
     @InjectRepository(Heritage)
     private heritageRepository: Repository<Heritage>,
@@ -33,12 +31,7 @@ export class HeritageService {
       throw new NotFoundException(`Place with ID ${placeId} not found`);
     }
 
-    const heritage = this.heritageRepository.create({
-      name,
-      description,
-      tags: JSON.parse(tagIds),
-      place,
-    });
+    const heritage = this.heritageRepository.create({ name, description, tags: JSON.parse(tagIds), place });
 
     try {
       const savedHeritage = await this.heritageRepository.save(heritage);
@@ -57,9 +50,70 @@ export class HeritageService {
 
       return savedHeritage;
     } catch (error) {
-      throw new BadRequestException(
-        'Error creating heritage or uploading images',
+      this.logger.error('Error creating heritage or uploading images', error.stack);
+      throw new BadRequestException('Error creating heritage or uploading images');
+    }
+  }
+
+  async findAll(): Promise<{ heritage: Heritage; images: Image[] }[]> {
+    try {
+      const heritage = await this.heritageRepository.find({ where: { isDeleted: false } });
+
+      const heritageWithImages = await Promise.all(
+        heritage.map(async (heritage) => {
+          const images = await this.imageService.getImagesByEntity(heritage.id.toString());
+          return { heritage, images };
+        }),
       );
+
+      return heritageWithImages;
+    } catch (error) {
+      this.logger.error('Error fetching all heritages', error.stack);
+      throw new BadRequestException('Error fetching all heritages');
+    }
+  }
+
+  async findByTag(tagId: number): Promise<{ heritage: Heritage, images: Image[]}[]> {
+    try {
+        const heritages = await this.heritageRepository
+          .createQueryBuilder('heritage')
+          .where(
+            new Brackets(qb => {
+              qb.where('JSON_CONTAINS(heritage.tags, :tagId)', { tagId: `[${tagId}]` });
+            }),
+          )
+          .andWhere('heritage.isDeleted = false')
+          .getMany();
+
+        const heritageWithPlaces = await Promise.all(
+          heritages.map(async (heritage) => {
+            const images = await this.imageService.getImagesByEntity(heritage.id.toString());
+            return { heritage, images };
+          }),
+        );
+
+        return heritageWithPlaces;
+    } catch (error) {
+        console.error(`Error fetching heritages with tag ID: ${tagId}`, error);
+        throw new BadRequestException('Error fetching heritages by tag');
+    }
+}
+
+
+  async findOne(id: number): Promise<{ heritage: Heritage; images: Image[] }> {
+    try {
+      const heritage = await this.heritageRepository.findOne({ where: { id } });
+
+      if (!heritage) {
+        this.logger.warn(`Heritage with ID ${id} not found`);
+        throw new NotFoundException(`Heritage with ID ${id} not found`);
+      }
+
+      const images = await this.imageService.getImagesByEntity(id.toString());
+      return { heritage, images };
+    } catch (error) {
+      this.logger.error(`Error fetching heritage with ID: ${id}`, error.stack);
+      throw new BadRequestException(`Error fetching heritage with ID: ${id}`);
     }
   }
 
@@ -72,6 +126,7 @@ export class HeritageService {
       const heritage = await this.heritageRepository.findOne({ where: { id } });
 
       if (!heritage) {
+        this.logger.warn(`Heritage with ID ${id} not found`);
         throw new NotFoundException('Heritage not found');
       }
 
@@ -93,9 +148,8 @@ export class HeritageService {
 
       return updatedHeritage;
     } catch (error) {
-      throw new BadRequestException(
-        'Error updating heritage or uploading images',
-      );
+      this.logger.error(`Error updating heritage with ID: ${id}`, error.stack);
+      throw new BadRequestException('Error updating heritage or uploading images');
     }
   }
 
@@ -104,14 +158,15 @@ export class HeritageService {
       const heritage = await this.heritageRepository.findOne({ where: { id } });
 
       if (!heritage) {
+        this.logger.warn(`Heritage with ID ${id} not found`);
         throw new NotFoundException(`Heritage with ID ${id} not found`);
       }
 
       await this.imageService.deleteImagesByEntity(id.toString());
       await this.heritageRepository.update(id, { isDeleted: true });
     } catch (error) {
+      this.logger.error(`Error deleting heritage with ID: ${id}`, error.stack);
       throw new BadRequestException('Error deleting heritage or associated images');
     }
   }
-
 }
