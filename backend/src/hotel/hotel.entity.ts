@@ -1,12 +1,7 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
 import { Place } from '../place/place.entity';
 import { User } from '../user/user.entity';
-
-export enum RegistrationStatus {
-  ACCEPTED = 'ACCEPTED',
-  PENDING = 'PENDING',
-  REJECTED = 'REJECTED',
-}
+import { RegistrationStatus } from 'src/types/registrationStatus.enum';
 
 @Entity()
 export class Hotel {
@@ -19,10 +14,10 @@ export class Hotel {
   @Column('text')
   description: string;
 
-  @Column({nullable: true})
+  @Column({ nullable: true })
   websiteLink?: string;
 
-  @Column()
+  @Column({ nullable: true })
   contact?: string;
 
   @Column()
@@ -37,7 +32,11 @@ export class Hotel {
   @Column()
   price: number;
 
-  @Column({ type: 'enum', enum: RegistrationStatus, default: RegistrationStatus.PENDING })
+  @Column({
+    type: 'enum',
+    enum: RegistrationStatus,
+    default: RegistrationStatus.PENDING,
+  })
   registrationStatus: RegistrationStatus;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
@@ -46,9 +45,9 @@ export class Hotel {
   @Column({ default: false })
   isDeleted: boolean;
 
-  @ManyToOne(() => Place, place => place.id)
+  @ManyToOne(() => Place, (place) => place.id)
   place: Place;
 
-  @ManyToOne(() => User, user => user.id)
+  @ManyToOne(() => User, (user) => user.id)
   user: User;
 }

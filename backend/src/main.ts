@@ -5,7 +5,6 @@ import { AllExceptionsFilter } from './Filter/all-exception.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { CustomResponseInterceptor } from './common/custom-response.Interceptor';
 import * as cookieParser from 'cookie-parser';
-import * as multer from 'multer';
 import * as express from 'express';
 
 async function bootstrap() {
@@ -39,13 +38,6 @@ async function bootstrap() {
   app.useGlobalFilters(new AllExceptionsFilter());
 
   app.useGlobalInterceptors(new CustomResponseInterceptor());
-
-  const upload = multer({
-    dest: './uploads',
-    limits: {
-      fileSize: 5 * 1024 * 1024,
-    },
-  });
 
   app.use('/uploads', express.static('uploads'));
 
