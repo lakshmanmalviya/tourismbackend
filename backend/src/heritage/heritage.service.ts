@@ -98,4 +98,20 @@ export class HeritageService {
       );
     }
   }
+
+  async remove(id: number): Promise<void> {
+    try {
+      const heritage = await this.heritageRepository.findOne({ where: { id } });
+
+      if (!heritage) {
+        throw new NotFoundException(`Heritage with ID ${id} not found`);
+      }
+
+      await this.imageService.deleteImagesByEntity(id.toString());
+      await this.heritageRepository.update(id, { isDeleted: true });
+    } catch (error) {
+      throw new BadRequestException('Error deleting heritage or associated images');
+    }
+  }
+
 }
