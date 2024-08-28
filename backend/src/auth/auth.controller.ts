@@ -60,7 +60,7 @@ export class AuthController {
         httpOnly: true,
         sameSite: 'strict',
       });
-      return { message: 'Login successful' };
+      return { message: 'Login successful', statusCode: 200, };
     } catch (error) {
       res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -95,7 +95,7 @@ export class AuthController {
         httpOnly: true,
         sameSite: 'strict',
       });
-      return { message: 'Token refreshed successfully' };
+      return { message: 'Token refreshed successfully', statusCode: 200, };
     } catch (error) {
       res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)

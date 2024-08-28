@@ -7,7 +7,6 @@ import { UserModule } from './user/user.module';
 import { HeritageModule } from './heritage/heritage.module';
 import { TagModule } from './tag/tag.module';
 import { PlaceModule } from './place/place.module';
-import { HeritageTagModule } from './heritage-tag/heritage-tag.module';
 import { HotelModule } from './hotel/hotel.module';
 import { ImageModule } from './image/image.module';
 import { QueryModule } from './query/query.module';
@@ -38,10 +37,9 @@ import { extname } from 'path';
       }),
     }),
     UserModule,
+    PlaceModule,
     HeritageModule,
     TagModule,
-    PlaceModule,
-    HeritageTagModule,
     HotelModule,
     ImageModule,
     QueryModule,
