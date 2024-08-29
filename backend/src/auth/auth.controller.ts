@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Post,
-  Body,
-  Res,
-  Req,
-  HttpStatus,
-} from '@nestjs/common';
+import { Controller, Post, Body, Res, Req, HttpStatus } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Response, Request } from 'express';
 import RegisterDto from './dto/register.dto';
@@ -60,7 +53,7 @@ export class AuthController {
         httpOnly: true,
         sameSite: 'strict',
       });
-      return { message: 'Login successful', statusCode: 200, };
+      return { statusCode: 200, message: 'Login successful' };
     } catch (error) {
       res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -95,7 +88,7 @@ export class AuthController {
         httpOnly: true,
         sameSite: 'strict',
       });
-      return { message: 'Token refreshed successfully', statusCode: 200, };
+      return { message: 'Token refreshed successfully', statusCode: 201 };
     } catch (error) {
       res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)

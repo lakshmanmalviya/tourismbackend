@@ -19,7 +19,6 @@ const api = axios.create({
   withCredentials: true,
 });
 
-// Handle Login
 function* handleLogin(action: PayloadAction<loginPayload>): Generator {
   try {
     yield call(api.post, '/auth/login', action.payload);
@@ -31,7 +30,7 @@ function* handleLogin(action: PayloadAction<loginPayload>): Generator {
   }
 }
 
-// Handle Register
+
 function* handleRegister(action: PayloadAction<registerPayload>): Generator {
   try {
     yield call(api.post, '/auth/register', action.payload);
@@ -43,7 +42,6 @@ function* handleRegister(action: PayloadAction<registerPayload>): Generator {
   }
 }
 
-// Handle Refresh Token
 function* handleRefreshToken(): Generator {
   try {
     yield call(api.post, '/auth/refresh-token');
