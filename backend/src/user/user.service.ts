@@ -7,7 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
 import { CreateUserDto } from './create-user.dto';
-import { Role } from 'src/types/roles.enum';
+import { HotelService } from 'src/hotel/hotel.service';
 
 @Injectable()
 export class UserService {
@@ -39,10 +39,5 @@ export class UserService {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
     return user;
-  }
-
-  async isAdmin(userId: number): Promise<boolean> {
-    const user = await this.findUserById(userId);
-    return user.role === Role.ADMIN;
   }
 }

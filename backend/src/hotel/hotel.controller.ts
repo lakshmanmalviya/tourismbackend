@@ -10,6 +10,8 @@ import {
   Param,
   Delete,
   Req,
+  Get,
+  Query,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { HotelService } from './hotel.service';
@@ -20,11 +22,34 @@ import { Roles } from '../role/roles.decorator';
 import { plainToInstance } from 'class-transformer';
 import { validateOrReject } from 'class-validator';
 import { UpdateHotelDto } from './dto/update-hotel.dto';
-import { AuthenticatedRequest } from 'src/types/authenticatedRequest';
 
 @Controller('hotels')
 export class HotelController {
   constructor(private readonly hotelService: HotelService) {}
+
+  @Get()
+  async findAll(@Query('ownerId') ownerId: number) {
+    try {
+      const hotels = await this.hotelService.findAll(ownerId);
+      return {
+        statusCode: 200,
+        message: 'Hotels fetched successfully',
+        data: hotels,
+      };
+    } catch (error) {
+      throw new BadRequestException(' Error fetching hotels', error.message);
+    }
+  }
+
+  @Get(':id')
+  async findOne(@Param('id') id: number) {
+    const hotel = await this.hotelService.findOne(id);
+    return {
+      statusCode: 200,
+      message: 'Hotel fetched successfully',
+      data: hotel,
+    };
+  }
 
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(['ADMIN', 'PROVIDER'])

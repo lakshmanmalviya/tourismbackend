@@ -16,7 +16,6 @@ import { UpdateHotelDto } from './dto/update-hotel.dto';
 import { Role } from 'src/types/roles.enum';
 @Injectable()
 export class HotelService {
-
   constructor(
     @InjectRepository(Hotel)
     private hotelRepository: Repository<Hotel>,
@@ -24,6 +23,44 @@ export class HotelService {
     private readonly placeService: PlaceService,
     private readonly userService: UserService,
   ) {}
+
+  async findAll(ownerId: number): Promise<Hotel[]> {
+    try {
+      if (ownerId) {
+        const user = await this.userService.findUserById(ownerId);
+
+        const hotels = await this.hotelRepository.find({
+          where: { user, isDeleted: false },
+          relations: ['place', 'user'],
+        });
+
+        if (hotels.length > 0) {
+          return hotels;
+        }
+        throw new NotFoundException('No hotels found for the given user');
+      } else {
+        return this.hotelRepository.find({
+          where: { isDeleted: false },
+          relations: ['place', 'user'],
+        });
+      }
+    } catch (error) {
+      throw new BadRequestException('Error fetching hotels');
+    }
+  }
+
+  async findOne(id: number): Promise<Hotel> {
+    const hotel = await this.hotelRepository.findOne({
+      where: { id, isDeleted: false },
+      relations: ['place', 'user'],
+    });
+
+    if (!hotel) {
+      throw new NotFoundException('Hotel not found');
+    }
+
+    return hotel;
+  }
 
   async create(
     createHotelDto: CreateHotelDto,
@@ -84,14 +121,18 @@ export class HotelService {
     }
   }
 
-
-  async update(id: number, updateHotelDto: UpdateHotelDto, files: Express.Multer.File[]): Promise<Hotel> {
-    const hotel = await this.hotelRepository.findOne({ where: { id, isDeleted: false } });
+  async update(
+    id: number,
+    updateHotelDto: UpdateHotelDto,
+    files: Express.Multer.File[],
+  ): Promise<Hotel> {
+    const hotel = await this.hotelRepository.findOne({
+      where: { id, isDeleted: false },
+    });
     if (!hotel) {
       throw new NotFoundException('Hotel not found');
-    }
-    else {
-      const user = await this.userService.findUserById(hotel.userId)
+    } else {
+      const user = await this.userService.findUserById(hotel.userId);
 
       if (user.role === Role.PROVIDER) {
         hotel.registrationStatus = RegistrationStatus.PENDING;
@@ -121,7 +162,9 @@ export class HotelService {
   }
 
   async softDelete(id: number): Promise<void> {
-    const hotel = await this.hotelRepository.findOne({ where: { id, isDeleted: false } });
+    const hotel = await this.hotelRepository.findOne({
+      where: { id, isDeleted: false },
+    });
 
     if (!hotel) {
       throw new NotFoundException('Hotel not found');
@@ -130,5 +173,4 @@ export class HotelService {
     hotel.isDeleted = true;
     await this.hotelRepository.save(hotel);
   }
-  
 }
