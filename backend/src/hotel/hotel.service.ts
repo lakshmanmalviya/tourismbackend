@@ -119,5 +119,16 @@ export class HotelService {
       throw new BadRequestException('Error updating hotel');
     }
   }
+
+  async softDelete(id: number): Promise<void> {
+    const hotel = await this.hotelRepository.findOne({ where: { id, isDeleted: false } });
+
+    if (!hotel) {
+      throw new NotFoundException('Hotel not found');
+    }
+
+    hotel.isDeleted = true;
+    await this.hotelRepository.save(hotel);
+  }
   
 }

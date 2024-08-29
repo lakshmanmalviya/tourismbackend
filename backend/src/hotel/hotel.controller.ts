@@ -8,6 +8,8 @@ import {
   BadRequestException,
   Patch,
   Param,
+  Delete,
+  Req,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { HotelService } from './hotel.service';
@@ -18,6 +20,7 @@ import { Roles } from '../role/roles.decorator';
 import { plainToInstance } from 'class-transformer';
 import { validateOrReject } from 'class-validator';
 import { UpdateHotelDto } from './dto/update-hotel.dto';
+import { AuthenticatedRequest } from 'src/types/authenticatedRequest';
 
 @Controller('hotels')
 export class HotelController {
@@ -57,14 +60,18 @@ export class HotelController {
   @UseInterceptors(FilesInterceptor('files'))
   async update(
     @Param('id') id: number,
-    @Body() updateHotelDto: Record<string,any>,
+    @Body() updateHotelDto: Record<string, any>,
     @UploadedFiles() files: Express.Multer.File[],
   ) {
     try {
       const transformedDto = plainToInstance(UpdateHotelDto, updateHotelDto);
       await validateOrReject(transformedDto);
 
-      const updatedHotel = await this.hotelService.update(id, transformedDto, files);
+      const updatedHotel = await this.hotelService.update(
+        id,
+        transformedDto,
+        files,
+      );
       return {
         statusCode: 200,
         message: 'Hotel updated successfully with images',
@@ -75,4 +82,18 @@ export class HotelController {
     }
   }
 
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(['ADMIN', 'PROVIDER'])
+  @Delete(':id')
+  async softDelete(@Param('id') id: number) {
+    try {
+      await this.hotelService.softDelete(id);
+      return {
+        statusCode: 200,
+        message: 'Hotel deleted successfully',
+      };
+    } catch (error) {
+      throw new BadRequestException('Error deleting hotel');
+    }
+  }
 }
