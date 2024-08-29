@@ -22,6 +22,7 @@ import { Roles } from '../role/roles.decorator';
 import { plainToInstance } from 'class-transformer';
 import { validateOrReject } from 'class-validator';
 import { UpdateHotelDto } from './dto/update-hotel.dto';
+import { RegistrationStatus } from 'src/types/registrationStatus.enum';
 
 @Controller('hotels')
 export class HotelController {
@@ -119,6 +120,22 @@ export class HotelController {
     }
   }
 
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(['ADMIN'])
+  @Patch('status/:hotelId')
+  async updateStatus(@Param('hotelId') hotelId: number, @Body('status') status: RegistrationStatus) {
+    try {
+      const updatedHotel = await this.hotelService.updateStatus(hotelId, status);
+      return {
+        statusCode: 200,
+        message: 'Hotel status updated successfully',
+        data: updatedHotel,
+      };
+    } catch (error) {
+      throw new BadRequestException('Error updating hotel status');
+    }
+  }
+  
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(['ADMIN', 'PROVIDER'])
   @Delete(':id')
