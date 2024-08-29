@@ -62,6 +62,16 @@ export class HotelService {
     return hotel;
   }
 
+  async findPending(): Promise<Hotel[]> {
+    const hotels = await this.hotelRepository.find({
+      where: {
+        registrationStatus: RegistrationStatus.PENDING,
+        isDeleted: false,
+      },
+      relations: ['place', 'user'],
+    });
+    return hotels;
+  }
   async create(
     createHotelDto: CreateHotelDto,
     files: Express.Multer.File[],

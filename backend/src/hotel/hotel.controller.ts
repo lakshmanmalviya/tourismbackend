@@ -40,7 +40,18 @@ export class HotelController {
       throw new BadRequestException(' Error fetching hotels', error.message);
     }
   }
-
+  
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(['ADMIN'])
+  @Get('pending')
+  async findPending() {
+    const hotels = await this.hotelService.findPending();
+    return {
+      statusCode: 200,
+      message: 'Pending hotels fetched successfully',
+      data: hotels,
+    };
+  }
   @Get(':id')
   async findOne(@Param('id') id: number) {
     const hotel = await this.hotelService.findOne(id);
@@ -50,6 +61,7 @@ export class HotelController {
       data: hotel,
     };
   }
+
 
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(['ADMIN', 'PROVIDER'])
