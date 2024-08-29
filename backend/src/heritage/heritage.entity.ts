@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToMany, RelationId } from 'typeorm';
 import { Place } from '../place/place.entity';
 
 @Entity()
@@ -20,4 +20,7 @@ export class Heritage {
 
   @ManyToOne(() => Place, place => place.id)
   place: Place;
+
+  @RelationId((heritage: Heritage) => heritage.place)
+  placeId: number;
 }

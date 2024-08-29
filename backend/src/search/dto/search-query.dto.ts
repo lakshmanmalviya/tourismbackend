@@ -1,8 +1,9 @@
-import { IsOptional, IsString, IsEnum, IsNumber } from 'class-validator';
+import { IsOptional, IsString, IsEnum, IsNumber, IsArray } from 'class-validator';
 import { EntityType } from 'src/types/entityType.enum';
 
 export class SearchQueryDto {
   @IsString()
+  @IsOptional()
   keyword: string;
 
   @IsEnum(EntityType)
@@ -18,5 +19,13 @@ export class SearchQueryDto {
 
   @IsOptional()
   @IsNumber()
-  maxPrice?: number; 
+  maxPrice?: number;
+  
+  @IsOptional()
+  @IsNumber()
+  placeId: number;
+
+  @IsOptional()
+  @IsArray()
+  tagIds: [number];
 }
