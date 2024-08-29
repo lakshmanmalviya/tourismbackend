@@ -2,8 +2,6 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
-  Logger,
-  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -14,9 +12,10 @@ import { EntityType } from 'src/types/entityType.enum';
 import { RegistrationStatus } from 'src/types/registrationStatus.enum';
 import { UserService } from 'src/user/user.service';
 import { Hotel } from './hotel.entity';
+import { UpdateHotelDto } from './dto/update-hotel.dto';
+import { Role } from 'src/types/roles.enum';
 @Injectable()
 export class HotelService {
-  private readonly logger = new Logger(HotelService.name);
 
   constructor(
     @InjectRepository(Hotel)
@@ -81,11 +80,44 @@ export class HotelService {
 
       return savedHotel;
     } catch (error) {
-      this.logger.error(
-        'Error creating hotel or uploading images',
-        error.stack,
-      );
       throw new BadRequestException('Error creating hotel or uploading images');
     }
   }
+
+
+  async update(id: number, updateHotelDto: UpdateHotelDto, files: Express.Multer.File[]): Promise<Hotel> {
+    const hotel = await this.hotelRepository.findOne({ where: { id, isDeleted: false } });
+    if (!hotel) {
+      throw new NotFoundException('Hotel not found');
+    }
+    else {
+      const user = await this.userService.findUserById(hotel.userId)
+
+      if (user.role === Role.PROVIDER) {
+        hotel.registrationStatus = RegistrationStatus.PENDING;
+      }
+    }
+    Object.assign(hotel, updateHotelDto);
+    hotel.updatedAt = new Date();
+
+    try {
+      const updatedHotel = await this.hotelRepository.save(hotel);
+      if (files && files.length > 0) {
+        const uploadPromises = files.map((file) => {
+          const createImageDto = {
+            entityType: EntityType.HOTEL,
+            entityId: updatedHotel.id.toString(),
+          };
+          return this.imageService.uploadImage(file, createImageDto);
+        });
+
+        await Promise.all(uploadPromises);
+      }
+
+      return updatedHotel;
+    } catch (error) {
+      throw new BadRequestException('Error updating hotel');
+    }
+  }
+  
 }

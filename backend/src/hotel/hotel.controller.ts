@@ -6,6 +6,8 @@ import {
   UseInterceptors,
   UseGuards,
   BadRequestException,
+  Patch,
+  Param,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { HotelService } from './hotel.service';
@@ -15,6 +17,7 @@ import { RolesGuard } from '../role/role.guard';
 import { Roles } from '../role/roles.decorator';
 import { plainToInstance } from 'class-transformer';
 import { validateOrReject } from 'class-validator';
+import { UpdateHotelDto } from './dto/update-hotel.dto';
 
 @Controller('hotels')
 export class HotelController {
@@ -47,4 +50,29 @@ export class HotelController {
       throw new BadRequestException('Error creating hotel');
     }
   }
+
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(['ADMIN', 'PROVIDER'])
+  @Patch(':id')
+  @UseInterceptors(FilesInterceptor('files'))
+  async update(
+    @Param('id') id: number,
+    @Body() updateHotelDto: Record<string,any>,
+    @UploadedFiles() files: Express.Multer.File[],
+  ) {
+    try {
+      const transformedDto = plainToInstance(UpdateHotelDto, updateHotelDto);
+      await validateOrReject(transformedDto);
+
+      const updatedHotel = await this.hotelService.update(id, transformedDto, files);
+      return {
+        statusCode: 200,
+        message: 'Hotel updated successfully with images',
+        data: updatedHotel,
+      };
+    } catch (error) {
+      throw new BadRequestException('Error updating hotel');
+    }
+  }
+
 }

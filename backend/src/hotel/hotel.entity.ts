@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, RelationId } from 'typeorm';
 import { Place } from '../place/place.entity';
 import { User } from '../user/user.entity';
 import { RegistrationStatus } from 'src/types/registrationStatus.enum';
@@ -48,6 +48,13 @@ export class Hotel {
   @ManyToOne(() => Place, (place) => place.id)
   place: Place;
 
+  @RelationId((hotel: Hotel) => hotel.place)
+  placeId: number;
+
   @ManyToOne(() => User, (user) => user.id)
   user: User;
+
+  
+  @RelationId((hotel: Hotel) => hotel.user)
+  userId: number;
 }
