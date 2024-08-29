@@ -131,6 +131,24 @@ export class HeritageService {
     }
   }
 
+  async findByPlaceId(placeId: number) {
+    try {
+      const heritages = await this.heritageRepository.find({
+        where: { placeId, isDeleted: false },
+      });
+
+      if (heritages.length > 0) {
+        return heritages;
+      } else {
+        throw new NotFoundException(
+          `No heritages found for place with ID ${placeId}`,
+        );
+      }
+    } catch (error) {
+      throw new BadRequestException('Error fetching heritages by place ID');
+    }
+  }
+  
   async update(
     id: number,
     updateHeritageDto: UpdateHeritageDto,

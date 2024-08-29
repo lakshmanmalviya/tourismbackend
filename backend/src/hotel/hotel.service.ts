@@ -131,6 +131,18 @@ export class HotelService {
     }
   }
 
+  async findByPlaceId(placeId: number) {
+    try{
+      const hotels = await this.hotelRepository.find({
+        where: { placeId, isDeleted: false },
+        relations: ['place', 'user'],
+      });
+      return hotels;
+    } catch (err) {
+      throw new BadRequestException('Error fetching hotels by place id');
+    }
+  }
+
   async update(
     id: number,
     updateHotelDto: UpdateHotelDto,

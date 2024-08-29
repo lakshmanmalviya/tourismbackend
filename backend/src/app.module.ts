@@ -15,6 +15,7 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { SearchController } from './search/search.controller';
 import { SearchModule } from './search/search.module';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -48,7 +49,7 @@ import { SearchModule } from './search/search.module';
     SearchModule,
   ],
   providers: [AppService],
-  controllers: [SearchController],
+  controllers: [AppController],
 })
 export class AppModule {
   constructor(private dataSource: DataSource) {}
