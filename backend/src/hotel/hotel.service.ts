@@ -171,6 +171,21 @@ export class HotelService {
     }
   }
 
+  async updateStatus(id: number, status: RegistrationStatus): Promise<Hotel> {
+    const hotel = await this.hotelRepository.findOne({
+      where: { id, isDeleted: false },
+    });
+
+    if (!hotel) {
+      throw new NotFoundException('Hotel not found');
+    }
+
+    hotel.registrationStatus = status;
+    hotel.updatedAt = new Date();
+
+    return this.hotelRepository.save(hotel);
+  }
+
   async softDelete(id: number): Promise<void> {
     const hotel = await this.hotelRepository.findOne({
       where: { id, isDeleted: false },
