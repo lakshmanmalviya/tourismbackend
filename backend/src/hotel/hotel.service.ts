@@ -14,6 +14,8 @@ import { UserService } from 'src/user/user.service';
 import { Hotel } from './hotel.entity';
 import { UpdateHotelDto } from './dto/update-hotel.dto';
 import { Role } from 'src/types/roles.enum';
+import { PaginationDto } from '../common/dto/pagination.dto';
+
 @Injectable()
 export class HotelService {
   constructor(
@@ -24,25 +26,36 @@ export class HotelService {
     private readonly userService: UserService,
   ) {}
 
-  async findAll(ownerId: number): Promise<Hotel[]> {
+  async findAll(
+    ownerId: number,
+    paginationDto: PaginationDto,
+  ): Promise<{ data: Hotel[]; total: number }> {
+    const { page, limit } = paginationDto;
+    const skip = (page - 1) * limit;
+
     try {
       if (ownerId) {
         const user = await this.userService.findUserById(ownerId);
 
-        const hotels = await this.hotelRepository.find({
+        const [hotels, total] = await this.hotelRepository.findAndCount({
           where: { user, isDeleted: false },
           relations: ['place', 'user'],
+          take: limit,
+          skip: skip,
         });
 
         if (hotels.length > 0) {
-          return hotels;
+          return { data: hotels, total };
         }
         throw new NotFoundException('No hotels found for the given user');
       } else {
-        return this.hotelRepository.find({
+        const [hotels, total] = await this.hotelRepository.findAndCount({
           where: { isDeleted: false },
           relations: ['place', 'user'],
+          take: limit,
+          skip: skip,
         });
+        return { data: hotels, total };
       }
     } catch (error) {
       throw new BadRequestException('Error fetching hotels');
@@ -62,16 +75,24 @@ export class HotelService {
     return hotel;
   }
 
-  async findPending(): Promise<Hotel[]> {
-    const hotels = await this.hotelRepository.find({
+  async findPending(
+    paginationDto: PaginationDto,
+  ): Promise<{ data: Hotel[]; total: number }> {
+    const { page, limit } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    const [hotels, total] = await this.hotelRepository.findAndCount({
       where: {
         registrationStatus: RegistrationStatus.PENDING,
         isDeleted: false,
       },
       relations: ['place', 'user'],
+      take: limit,
+      skip: skip,
     });
-    return hotels;
+    return { data: hotels, total };
   }
+
   async create(
     createHotelDto: CreateHotelDto,
     files: Express.Multer.File[],
@@ -128,6 +149,26 @@ export class HotelService {
       return savedHotel;
     } catch (error) {
       throw new BadRequestException('Error creating hotel or uploading images');
+    }
+  }
+
+  async findByPlaceId(
+    placeId: number,
+    paginationDto: PaginationDto,
+  ): Promise<{ data: Hotel[]; total: number }> {
+    const { page, limit } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    try {
+      const [hotels, total] = await this.hotelRepository.findAndCount({
+        where: { placeId, isDeleted: false },
+        relations: ['place', 'user'],
+        take: limit,
+        skip: skip,
+      });
+      return { data: hotels, total };
+    } catch (err) {
+      throw new BadRequestException('Error fetching hotels by place id');
     }
   }
 

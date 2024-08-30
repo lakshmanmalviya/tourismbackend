@@ -11,6 +11,7 @@ import {
   Delete,
   NotFoundException,
   Get,
+  Query,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { HeritageService } from './heritage.service';
@@ -25,13 +26,22 @@ export class HeritageController {
   constructor(private readonly heritageService: HeritageService) {}
 
   @Get()
-  async findAll() {
+  async findAll(
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ) {
     try {
-      const heritages = await this.heritageService.findAll();
+      const { data, totalCount, totalPages } = await this.heritageService.findAll(page, limit);
       return {
         statusCode: 200,
         message: 'All heritages fetched successfully',
-        data: heritages,
+        data,
+        meta: {
+          totalCount,
+          totalPages,
+          currentPage: page,
+          limit,
+        },
       };
     } catch (error) {
       throw new BadRequestException('Error fetching heritages');
@@ -39,16 +49,50 @@ export class HeritageController {
   }
 
   @Get('tag/:tagId')
-  async findByTag(@Param('tagId') tagId: number) {
+  async findByTag(
+    @Param('tagId') tagId: number,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ) {
     try {
-      const heritages = await this.heritageService.findByTag(tagId);
+      const { data, totalCount, totalPages } = await this.heritageService.findByTag(tagId, page, limit);
       return {
         statusCode: 200,
         message: 'Heritages fetched successfully',
-        data: heritages,
+        data,
+        meta: {
+          totalCount,
+          totalPages,
+          currentPage: page,
+          limit,
+        },
       };
     } catch (error) {
       throw new BadRequestException('Error fetching heritages by tag');
+    }
+  }
+
+  @Get('place/:placeId')
+  async findByPlaceId(
+    @Param('placeId') placeId: number,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ) {
+    try {
+      const { data, totalCount, totalPages } = await this.heritageService.findByPlaceId(placeId, page, limit);
+      return {
+        statusCode: 200,
+        message: 'Heritages fetched successfully',
+        data,
+        meta: {
+          totalCount,
+          totalPages,
+          currentPage: page,
+          limit,
+        },
+      };
+    } catch (error) {
+      throw new BadRequestException('Error fetching heritages by place ID');
     }
   }
 
@@ -62,30 +106,23 @@ export class HeritageController {
         data: heritage,
       };
     } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw new NotFoundException(error.message);
-      }
-      throw new BadRequestException('Error fetching heritage details');
+      throw new NotFoundException(`Heritage with ID ${id} not found`);
     }
   }
 
+  @Post()
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(['ADMIN'])
-  @Post()
   @UseInterceptors(FilesInterceptor('files'))
   async create(
     @Body() createHeritageDto: CreateHeritageDto,
     @UploadedFiles() files: Express.Multer.File[],
   ) {
     try {
-      if (!files || files.length === 0) {
-        throw new BadRequestException('At least one file is required');
-      }
-
       const heritage = await this.heritageService.create(createHeritageDto, files);
       return {
         statusCode: 201,
-        message: 'Heritage created successfully with images',
+        message: 'Heritage created successfully',
         data: heritage,
       };
     } catch (error) {
@@ -93,9 +130,9 @@ export class HeritageController {
     }
   }
 
+  @Patch(':id')
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(['ADMIN'])
-  @Patch(':id')
   @UseInterceptors(FilesInterceptor('files'))
   async update(
     @Param('id') id: number,
@@ -103,31 +140,28 @@ export class HeritageController {
     @UploadedFiles() files: Express.Multer.File[],
   ) {
     try {
-      const updatedHeritage = await this.heritageService.update(id, updateHeritageDto, files);
+      const heritage = await this.heritageService.update(id, updateHeritageDto, files);
       return {
         statusCode: 200,
-        message: 'Heritage updated successfully with images',
-        data: updatedHeritage,
+        message: 'Heritage updated successfully',
+        data: heritage,
       };
     } catch (error) {
       throw new BadRequestException('Error updating heritage');
     }
   }
 
+  @Delete(':id')
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(['ADMIN'])
-  @Delete(':id')
   async remove(@Param('id') id: number) {
     try {
       await this.heritageService.remove(id);
       return {
         statusCode: 200,
-        message: 'Heritage and associated images deleted successfully',
+        message: 'Heritage deleted successfully',
       };
     } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw new NotFoundException(error.message);
-      }
       throw new BadRequestException('Error deleting heritage');
     }
   }
