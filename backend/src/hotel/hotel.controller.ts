@@ -9,7 +9,6 @@ import {
   Patch,
   Param,
   Delete,
-  Req,
   Get,
   Query,
 } from '@nestjs/common';
@@ -29,40 +28,59 @@ export class HotelController {
   constructor(private readonly hotelService: HotelService) {}
 
   @Get()
-  async findAll(@Query('ownerId') ownerId: number) {
+  async findAll(
+    @Query('ownerId') ownerId: number,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ) {
     try {
-      const hotels = await this.hotelService.findAll(ownerId);
+      const hotels = await this.hotelService.findAll(ownerId,{ page, limit});
       return {
         statusCode: 200,
         message: 'Hotels fetched successfully',
-        data: hotels,
+        data: hotels.data,
+        total: hotels.total,
+        page,
+        limit,
       };
     } catch (error) {
-      throw new BadRequestException(' Error fetching hotels', error.message);
+      throw new BadRequestException('Error fetching hotels', error.message);
     }
   }
-  
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(['ADMIN'])
+
   @Get('pending')
-  async findPending() {
-    const hotels = await this.hotelService.findPending();
-    return {
-      statusCode: 200,
-      message: 'Pending hotels fetched successfully',
-      data: hotels,
-    };
-  }
-  @Get(':id')
-  async findOne(@Param('id') id: number) {
-    const hotel = await this.hotelService.findOne(id);
-    return {
-      statusCode: 200,
-      message: 'Hotel fetched successfully',
-      data: hotel,
-    };
+  async findPending(
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ) {
+    try {
+      const hotels = await this.hotelService.findPending({page, limit});
+      return {
+        statusCode: 200,
+        message: 'Pending hotels fetched successfully',
+        data: hotels.data,
+        total: hotels.total,
+        page,
+        limit,
+      };
+    } catch (error) {
+      throw new BadRequestException('Error fetching pending hotels');
+    }
   }
 
+  @Get(':id')
+  async findOne(@Param('id') id: number) {
+    try {
+      const hotel = await this.hotelService.findOne(id);
+      return {
+        statusCode: 200,
+        message: 'Hotel fetched successfully',
+        data: hotel,
+      };
+    } catch (error) {
+      throw new BadRequestException('Error fetching hotel');
+    }
+  }
 
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(['ADMIN', 'PROVIDER'])
@@ -78,7 +96,6 @@ export class HotelController {
       }
 
       const transformedDto = plainToInstance(CreateHotelDto, createHotelDto);
-
       await validateOrReject(transformedDto);
 
       const hotel = await this.hotelService.create(transformedDto, files);
@@ -123,9 +140,15 @@ export class HotelController {
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(['ADMIN'])
   @Patch('status/:hotelId')
-  async updateStatus(@Param('hotelId') hotelId: number, @Body('status') status: RegistrationStatus) {
+  async updateStatus(
+    @Param('hotelId') hotelId: number,
+    @Body('status') status: RegistrationStatus,
+  ) {
     try {
-      const updatedHotel = await this.hotelService.updateStatus(hotelId, status);
+      const updatedHotel = await this.hotelService.updateStatus(
+        hotelId,
+        status,
+      );
       return {
         statusCode: 200,
         message: 'Hotel status updated successfully',
@@ -135,7 +158,7 @@ export class HotelController {
       throw new BadRequestException('Error updating hotel status');
     }
   }
-  
+
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(['ADMIN', 'PROVIDER'])
   @Delete(':id')
