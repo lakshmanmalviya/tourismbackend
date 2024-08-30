@@ -1,31 +1,46 @@
-import { IsOptional, IsString, IsEnum, IsNumber, IsArray } from 'class-validator';
+import { IsEnum, IsOptional, IsString, IsNumber } from 'class-validator';
 import { EntityType } from 'src/types/entityType.enum';
 
 export class SearchQueryDto {
-  @IsString()
   @IsOptional()
-  keyword: string;
+  @IsString()
+  keyword?: string;
 
   @IsEnum(EntityType)
   entityType: EntityType;
 
   @IsOptional()
   @IsNumber()
-  hotelStarRating?: number; 
+  hotelStarRating?: number;
 
   @IsOptional()
   @IsNumber()
-  minPrice?: number; 
+  minPrice?: number;
 
   @IsOptional()
   @IsNumber()
   maxPrice?: number;
-  
-  @IsOptional()
-  @IsNumber()
-  placeId: number;
 
   @IsOptional()
-  @IsArray()
-  tagIds: [number];
+  @IsNumber()
+  placeId?: number;
+
+  @IsOptional()
+  tagIds?: number[];
+
+  @IsOptional()
+  @IsNumber()
+  page?: number;
+
+  @IsOptional()
+  @IsNumber()
+  limit?: number;
+
+  @IsOptional()
+  @IsString()
+  sortBy?: 'price' | 'hotelStarRating' | 'name';
+
+  @IsOptional()
+  @IsString()
+  sortOrder?: 'ASC' | 'DESC';
 }

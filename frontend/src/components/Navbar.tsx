@@ -50,7 +50,7 @@ const Navbar = () => {
   };
 
   return (
-    <header className="container mx-auto">
+    <header className="container px-10 md:px-20">
       <nav className="flex items-center justify-between py-2">
         <div className="flex items-center">
           <Image src={logo} alt="logo" width={50} height={50} />
@@ -59,7 +59,7 @@ const Navbar = () => {
 
         <div className="hidden md:flex space-x-8 text-lg font-medium text-gray-700">
           <Link href="/" className="hover:text-green-500 transition">Home</Link>
-          <Link href="/discover" className="hover:text-green-500 transition">Discover</Link>
+          <Link href="/Discover" className="hover:text-green-500 transition">Discover</Link>
           <Link href="/Heritage" className="hover:text-green-500 transition">Heritage</Link>
           <Link href="/Gallery" className="hover:text-green-500 transition">Gallery</Link>
           <Link href="/Hotel" className="hover:text-green-500 transition">Hotels</Link>

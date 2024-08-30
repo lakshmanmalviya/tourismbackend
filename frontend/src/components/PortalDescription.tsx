@@ -15,7 +15,7 @@ const PortalDescription = () => {
         </h1>
       </div>
 
-      <div className="flex flex-col md:flex-row justify-center items-center gap-12 mt-12 mb-20 px-12">
+      <div className="flex flex-col md:flex-row justify-center items-center gap-12 mt-12 mb-20 px-10 md:px-20">
         <div className="flex flex-col items-center p-8 shadow-lg">
           <Image src={card1} alt="Tourism Places of India" width={100} height={100} />
           <h2 className="text-xl font-semibold mt-4">Tourism Places of India</h2>
