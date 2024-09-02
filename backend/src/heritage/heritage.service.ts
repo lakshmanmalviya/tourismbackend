@@ -2,7 +2,6 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
-  Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, Repository } from 'typeorm';
@@ -64,14 +63,21 @@ export class HeritageService {
     }
   }
 
-  async findAll(): Promise<{ heritage: Heritage; images: Image[] }[]> {
+  async findAll(
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<{ data: { heritage: Heritage; images: Image[] }[]; totalCount: number; totalPages: number }> {
     try {
-      const heritage = await this.heritageRepository.find({
+      const [heritages, totalCount] = await this.heritageRepository.findAndCount({
+        skip: (page - 1) * limit,
+        take: limit,
         where: { isDeleted: false },
       });
 
+      const totalPages = Math.ceil(totalCount / limit);
+
       const heritageWithImages = await Promise.all(
-        heritage.map(async (heritage) => {
+        heritages.map(async (heritage) => {
           const images = await this.imageService.getImagesByEntity(
             heritage.id.toString(),
           );
@@ -79,7 +85,11 @@ export class HeritageService {
         }),
       );
 
-      return heritageWithImages;
+      return {
+        data: heritageWithImages,
+        totalCount,
+        totalPages,
+      };
     } catch (error) {
       throw new BadRequestException('Error fetching all heritages');
     }
@@ -87,9 +97,11 @@ export class HeritageService {
 
   async findByTag(
     tagId: number,
-  ): Promise<{ heritage: Heritage; images: Image[] }[]> {
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<{ data: { heritage: Heritage; images: Image[] }[]; totalCount: number; totalPages: number }> {
     try {
-      const heritages = await this.heritageRepository
+      const [heritages, totalCount] = await this.heritageRepository
         .createQueryBuilder('heritage')
         .where(
           new Brackets((qb) => {
@@ -99,9 +111,13 @@ export class HeritageService {
           }),
         )
         .andWhere('heritage.isDeleted = false')
-        .getMany();
+        .skip((page - 1) * limit)
+        .take(limit)
+        .getManyAndCount();
 
-      const heritageWithPlaces = await Promise.all(
+      const totalPages = Math.ceil(totalCount / limit);
+
+      const heritageWithImages = await Promise.all(
         heritages.map(async (heritage) => {
           const images = await this.imageService.getImagesByEntity(
             heritage.id.toString(),
@@ -110,7 +126,11 @@ export class HeritageService {
         }),
       );
 
-      return heritageWithPlaces;
+      return {
+        data: heritageWithImages,
+        totalCount,
+        totalPages,
+      };
     } catch (error) {
       throw new BadRequestException('Error fetching heritages by tag');
     }
@@ -131,19 +151,26 @@ export class HeritageService {
     }
   }
 
-  async findByPlaceId(placeId: number) {
+  async findByPlaceId(
+    placeId: number,
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<{ data: Heritage[]; totalCount: number; totalPages: number }> {
     try {
-      const heritages = await this.heritageRepository.find({
-        where: { placeId, isDeleted: false },
+      const place = await this.placeService.getPlaceById(placeId);
+      const [heritages, totalCount] = await this.heritageRepository.findAndCount({
+        where: { place, isDeleted: false },
+        skip: (page - 1) * limit,
+        take: limit,
       });
 
-      if (heritages.length > 0) {
-        return heritages;
-      } else {
-        throw new NotFoundException(
-          `No heritages found for place with ID ${placeId}`,
-        );
-      }
+      const totalPages = Math.ceil(totalCount / limit);
+
+      return {
+        data: heritages,
+        totalCount,
+        totalPages,
+      };
     } catch (error) {
       throw new BadRequestException('Error fetching heritages by place ID');
     }
