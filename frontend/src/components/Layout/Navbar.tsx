@@ -1,12 +1,12 @@
 import Image from "next/image";
-import logo from "../assets/logo.png";
+import logo from "../../assets/logo.png";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import * as React from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import Register from "./Register";
-import Login from "./Login";
+import Register from "../App/Register";
+import Login from "../App/Login";
 import Modal from "@mui/material/Modal";
 import { ToastContainer } from "react-toastify";
 

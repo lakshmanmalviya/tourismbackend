@@ -2,7 +2,7 @@ import React from "react";
 import { FaXTwitter, FaFacebookF } from "react-icons/fa6";
 import { IoLogoInstagram } from "react-icons/io";
 import Image from "next/image";
-import background from "../assets/footerBg.jpg";
+import background from "../../assets/footerBg.jpg";
 
 const Footer = () => {
   return (

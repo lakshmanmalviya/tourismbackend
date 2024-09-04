@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { registerStart } from '../Redux/slices/authSlice';
+import { registerStart } from '../../Redux/slices/authSlice';
 import { pawdRegExp } from '@/utils/utils';
-import styles from '../styles/Register.module.css';
+import styles from '../../styles/Register.module.css';
 import { toast } from 'react-toastify';  
 import 'react-toastify/dist/ReactToastify.css'; 
-import { useAppDispatch, useAppSelector } from '../hooks/hook'; 
+import { useAppDispatch, useAppSelector } from '../../hooks/hook'; 
 
 
 const Register = ({ toggleForm, onSuccess }: { toggleForm: () => void, onSuccess: () => void }) => {
