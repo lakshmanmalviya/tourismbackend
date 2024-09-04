@@ -8,7 +8,6 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; 
 import { useAppDispatch, useAppSelector } from '../../hooks/hook'; 
 
-
 const Register = ({ toggleForm, onSuccess }: { toggleForm: () => void, onSuccess: () => void }) => {
   const dispatch = useAppDispatch();
   const { isAuthenticated, error } = useAppSelector((state) => state.auth); 
