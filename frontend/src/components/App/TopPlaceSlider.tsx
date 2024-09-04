@@ -1,13 +1,13 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { RootState, AppDispatch } from "../Redux/store";
-import { fetchAllPlacesStart } from "../Redux/slices/placeSlice";
+import { RootState, AppDispatch } from "../../Redux/store";
+import { fetchAllPlacesStart } from "../../Redux/slices/placeSlice";
 import Slider from "react-slick";
 import Image from "next/image";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import background from "../assets/topPlaceSliderBg.jpg";
-import { PlaceWithImages } from "../types/placesApiResponse";
+import background from "../../assets/topPlaceSliderBg.jpg";
+import { PlaceWithImages } from "../../types/placesApiResponse";
 
 const TopPlaceSlider: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();

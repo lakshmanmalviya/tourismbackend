@@ -1,9 +1,9 @@
 import React from "react";
-import logo from "../assets/logo.png";
+import logo from "../../assets/logo.png";
 import Image from "next/image";
-import card1 from "../assets/tour-guide.png";
-import card2 from "../assets/taj-mahal.png";
-import card3 from "../assets/accomodation.png";
+import card1 from "../../assets/tour-guide.png";
+import card2 from "../../assets/taj-mahal.png";
+import card3 from "../../assets/accomodation.png";
 
 const PortalDescription = () => {
   return (

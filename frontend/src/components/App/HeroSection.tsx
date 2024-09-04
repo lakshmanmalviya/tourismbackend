@@ -1,7 +1,7 @@
 import TypeWriter from "typewriter-effect";
 import { CiSearch } from "react-icons/ci";
 import Image from "next/image";
-import background from "../assets/heroSectionBg.jpg";
+import background from "../../assets/heroSectionBg.jpg";
 
 const HeroSection = () => {
   return (
