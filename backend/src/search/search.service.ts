@@ -1,14 +1,27 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between, In } from 'typeorm';
-import { Place } from 'src/place/place.entity';
+
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import {
+  InjectDataSource,
+  InjectRepository,
+} from '@nestjs/typeorm';
 import { Heritage } from 'src/heritage/heritage.entity';
 import { Hotel } from 'src/hotel/hotel.entity';
+import { Place } from 'src/place/place.entity';
+import {
+  Between,
+  DataSource,
+  FindManyOptions,
+  Like,
+  Raw,
+  Repository,
+} from 'typeorm';
 import { SearchQueryDto } from './dto/search-query.dto';
 import { EntityType } from 'src/types/entityType.enum';
 
 @Injectable()
 export class SearchService {
+  private readonly logger = new Logger(SearchService.name);
+
   constructor(
     @InjectRepository(Place)
     private readonly placeRepository: Repository<Place>,
@@ -16,95 +29,154 @@ export class SearchService {
     private readonly heritageRepository: Repository<Heritage>,
     @InjectRepository(Hotel)
     private readonly hotelRepository: Repository<Hotel>,
+    @InjectDataSource() private readonly datasource: DataSource,
   ) {}
 
   async search(query: SearchQueryDto) {
-    const {
-      keyword,
-      entityType,
-      hotelStarRating,
-      minPrice,
-      maxPrice,
-      placeId,
-      tagIds,
-    } = query;
+    this.logger.debug(`Starting search with query: ${JSON.stringify(query)}`);
 
-    console.log(query);
-
-    if (entityType === EntityType.ALL) {
-      let place = await this.placeRepository.find({
-        where: { name: keyword, isDeleted: false },
-      });
-
-      if (place.length === 0) {
-        place = null;
+    try {
+      switch (query.entityType) {
+        case EntityType.ALL:
+          return await this.searchAllEntities(query);
+        case EntityType.PLACE:
+          return await this.searchPlaces(query);
+        case EntityType.HERITAGE:
+          return await this.searchHeritages(query);
+        case EntityType.HOTEL:
+          return await this.searchHotels(query);
+        default:
+          throw new BadRequestException('Invalid entity type');
       }
+    } catch (error) {
+      this.logger.error('An error occurred during search', error.stack);
+      throw new BadRequestException(
+        'Internal server error occurred while performing search',
+      );
+    }
+  }
 
-      let heritages = await this.heritageRepository.find({
-        where: { name: keyword, isDeleted: false },
-      });
+  private async searchAllEntities(query: SearchQueryDto) {
+    const page = query.page || 1;
+    const limit = query.limit || 10;
 
-      if (heritages.length === 0) {
-        heritages = null;
-      }
-      let hotels = await this.hotelRepository.find({
-        where: { name: keyword, isDeleted: false },
-      });
+    const offset = (page - 1) * limit;
 
-      if (hotels.length === 0) {
-        hotels = null;
-      }
+    const allData = await this.datasource.query(
+      `SELECT * FROM 
+      (SELECT name, description, 'PLACE' as entity FROM place 
+      UNION 
+      SELECT name, description, 'HERITAGE' as entity FROM heritage 
+      UNION 
+      SELECT name, description, 'HOTEL' as entity FROM hotel) 
+      AS A 
+      WHERE A.name LIKE "%${query.keyword}%"
+      LIMIT ${limit} OFFSET ${offset}`,
+    );
 
-      return { place, heritages, hotels };
-    } else if (entityType === EntityType.PLACE) {
-      return this.placeRepository.find({
-        where: { name: keyword, isDeleted: false },
-      });
-    } else if (entityType === EntityType.HERITAGE) {
-      const filters: any = { isDeleted: false };
-      if (keyword) {
-        filters.name = keyword;
-      }
-      if (placeId) {
-        filters.placeId = placeId;
-      }
+    this.logger.debug('data from query : is ', allData);
+    return { allData };
+  }
 
-      if (tagIds) {
-        filters.tags = In(tagIds);
-      }
-      return this.heritageRepository.find(filters);
-    } else if (entityType === EntityType.HOTEL) {
-      const filters: any = { isDeleted: false };
-      if (keyword) {
-        filters.name = keyword;
-      }
+  private async searchPlaces(query: SearchQueryDto) {
+    const options = this.buildCommonOptions(query);
+    const places = await this.placeRepository.find({
+      ...options,
+      where: {
+        ...options.where,
+        name: query.keyword ? Like(`%${query.keyword}%`) : undefined,
+      },
+    });
 
-      if (hotelStarRating) {
-        filters.hotelStarRating = hotelStarRating;
-      }
+    this.logger.debug(`Search results for PLACES: ${places.length} found`);
+    return places;
+  }
 
-      if (placeId) {
-        const place = await this.placeRepository.find({
-          where: { id: placeId },
-        });
+  private async searchHeritages(query: SearchQueryDto) {
+    const options = this.buildHeritageOptions(query);
+    const heritages = await this.heritageRepository.find(options);
 
-        filters.place = place;
-      }
+    this.logger.debug(`Search results for HERITAGE: ${heritages.length} found`);
+    return heritages;
+  }
 
-      if (minPrice !== undefined && maxPrice !== undefined) {
-        filters.price = Between(minPrice, maxPrice);
-      } else if (minPrice !== undefined) {
-        filters.price = Between(minPrice, Infinity);
-      } else if (maxPrice !== undefined) {
-        filters.price = Between(0, maxPrice);
-      }
+  private async searchHotels(query: SearchQueryDto) {
+    const options = this.buildHotelOptions(query);
+    const hotels = await this.hotelRepository.find(options);
 
-      return this.hotelRepository.find({
-        where: filters,
-        relations: ['place', 'user'],
-      });
+    this.logger.debug(`Search results for HOTELS: ${hotels.length} found`);
+    return hotels;
+  }
+
+  private buildCommonOptions(
+    query: SearchQueryDto,
+  ): FindManyOptions<Place | Hotel | Heritage> {
+    const { page = 1, limit = 10, sortBy, sortOrder = 'ASC' } = query;
+    const skip = (page - 1) * limit;
+    console.log('Skip is here: ', skip, page, limit);
+    return {
+      skip,
+      take: limit,
+      where: { isDeleted: false },
+      order: sortBy
+        ? { [sortBy]: sortOrder as 'ASC' | 'DESC' }
+        : { name: 'ASC' },
+    };
+  }
+
+  private buildHeritageOptions(
+    query: SearchQueryDto,
+  ): FindManyOptions<Heritage> {
+    const options = this.buildCommonOptions(query);
+    let place;
+    if (query.placeId) {
+      place = { id: query.placeId };
     }
 
-    throw new BadRequestException('Invalid entity type');
+    return {
+      ...options,
+      where: {
+        ...options.where,
+        name: query.keyword ? Like(`%${query.keyword}%`) : undefined,
+        place: place || undefined,
+        tags:
+          query.tagIds && query.tagIds.length > 0
+            ? Raw((alias) => `${alias} && :tagIds`, { tagIds: query.tagIds })
+            : undefined,
+      },
+    };
+  }
+
+  private buildHotelOptions(query: SearchQueryDto): FindManyOptions<Hotel> {
+    const options = this.buildCommonOptions(query);
+    let place;
+    if (query.placeId) {
+      place = { id: query.placeId };
+    }
+
+    return {
+      ...options,
+      where: {
+        ...options.where,
+        name: query.keyword ? Like(`%${query.keyword}%`) : undefined,
+        hotelStarRating: query.hotelStarRating || undefined,
+        place: place,
+        price: this.buildPriceFilter(query.minPrice, query.maxPrice),
+      },
+      relations: ['place', 'user'],
+    };
+  }
+
+  private buildPriceFilter(minPrice?: number, maxPrice?: number) {
+    if (minPrice && maxPrice) {
+      return Between(minPrice, maxPrice);
+    }
+    if (minPrice) {
+      return Between(minPrice, 100000);
+    }
+    if (maxPrice) {
+      return Between(0, maxPrice);
+    }
+    return undefined;
   }
 }
