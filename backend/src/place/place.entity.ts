@@ -1,9 +1,10 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany, JoinColumn } from 'typeorm';
+import { Heritage } from 'src/heritage/heritage.entity';
 
 @Entity()
 export class Place {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn("uuid")
+  id: string;
 
   @Column()
   name: string;
@@ -13,4 +14,14 @@ export class Place {
 
   @Column({ default: false })
   isDeleted: boolean;
+
+  @Column({nullable: true}) 
+  thumbnailUrl: string;
+
+  @Column({ length: 1000}) 
+  mapUrl: string;
+
+  @OneToMany(() => Heritage, heritags => heritags.place, {eager: true, cascade: true})
+  heritages: Heritage[]
 }
+

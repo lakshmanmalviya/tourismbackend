@@ -9,6 +9,7 @@ import {
   Delete,
   Param,
   NotFoundException,
+  Get,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ImageService } from './image.service';
@@ -19,6 +20,20 @@ import { AuthGuard } from '../auth/auth.guard';
 export class ImageController {
   constructor(private readonly imageService: ImageService) {}
   
+  // @Get(':entityId')
+  // async getImagesByEntity(@Param('entityId') entityId: string) {
+  //   try {
+  //     const images = await this.imageService.getImagesByEntity(entityId);
+  //     return {
+  //       statusCode: 200,
+  //       message: 'Images retrieved successfully',
+  //       data: images,
+  //     };
+  //   } catch(error) {
+  //     throw new NotFoundException(error.message);
+  //   }
+    
+  // }
   @UseGuards(AuthGuard)
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))

@@ -7,6 +7,7 @@ import {
   IsInt,
   Min,
   Max,
+  IsNotEmpty,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { RegistrationStatus } from 'src/types/registrationStatus.enum';
@@ -21,6 +22,9 @@ export class CreateHotelDto {
   @IsOptional()
   @IsUrl()
   websiteLink?: string;
+
+  @IsNotEmpty()
+  mapUrl: string;
 
   @IsInt()
   @Min(1)
@@ -45,13 +49,11 @@ export class CreateHotelDto {
   @Transform(({ value }) => parseFloat(value))
   price: number;
 
-  @IsInt()
-  @Transform(({ value }) => parseInt(value, 10))
-  placeId: number;
+  @IsString()
+  placeId: string;
 
-  @IsInt()
-  @Transform(({ value }) => parseInt(value, 10))
-  userId: number;
+  @IsString()
+  userId: string;
 
   @IsEnum(RegistrationStatus)
   @IsOptional()

@@ -75,7 +75,7 @@ export class SearchService {
     );
 
     this.logger.debug('data from query : is ', allData);
-    return { allData };
+    return  allData;
   }
 
   private async searchPlaces(query: SearchQueryDto) {

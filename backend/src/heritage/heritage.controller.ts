@@ -5,129 +5,78 @@ import {
   UploadedFiles,
   UseInterceptors,
   UseGuards,
-  BadRequestException,
   Patch,
   Param,
   Delete,
-  NotFoundException,
   Get,
   Query,
 } from '@nestjs/common';
-import { FilesInterceptor } from '@nestjs/platform-express';
+import {
+  FileFieldsInterceptor,
+  FilesInterceptor,
+} from '@nestjs/platform-express';
 import { HeritageService } from './heritage.service';
 import { CreateHeritageDto } from './dto/create-heritage.dto';
 import { UpdateHeritageDto } from './dto/update-heritage.dto';
 import { AuthGuard } from '../auth/auth.guard';
 import { RolesGuard } from '../role/role.guard';
 import { Roles } from '../role/roles.decorator';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Controller('heritages')
 export class HeritageController {
   constructor(private readonly heritageService: HeritageService) {}
 
   @Get()
-  async findAll(
-    @Query('page') page: number = 1,
-    @Query('limit') limit: number = 10,
-  ) {
-    try {
-      const { data, totalCount, totalPages } = await this.heritageService.findAll(page, limit);
-      return {
-        statusCode: 200,
-        message: 'All heritages fetched successfully',
-        data,
-        meta: {
-          totalCount,
-          totalPages,
-          currentPage: page,
-          limit,
-        },
-      };
-    } catch (error) {
-      throw new BadRequestException('Error fetching heritages');
-    }
-  }
-
-  @Get('tag/:tagId')
-  async findByTag(
-    @Param('tagId') tagId: number,
-    @Query('page') page: number = 1,
-    @Query('limit') limit: number = 10,
-  ) {
-    try {
-      const { data, totalCount, totalPages } = await this.heritageService.findByTag(tagId, page, limit);
-      return {
-        statusCode: 200,
-        message: 'Heritages fetched successfully',
-        data,
-        meta: {
-          totalCount,
-          totalPages,
-          currentPage: page,
-          limit,
-        },
-      };
-    } catch (error) {
-      throw new BadRequestException('Error fetching heritages by tag');
-    }
-  }
-
-  @Get('place/:placeId')
-  async findByPlaceId(
-    @Param('placeId') placeId: number,
-    @Query('page') page: number = 1,
-    @Query('limit') limit: number = 10,
-  ) {
-    try {
-      const { data, totalCount, totalPages } = await this.heritageService.findByPlaceId(placeId, page, limit);
-      return {
-        statusCode: 200,
-        message: 'Heritages fetched successfully',
-        data,
-        meta: {
-          totalCount,
-          totalPages,
-          currentPage: page,
-          limit,
-        },
-      };
-    } catch (error) {
-      throw new BadRequestException('Error fetching heritages by place ID');
-    }
+  async findAll(@Query() query: PaginationDto) {
+    const { page = 1, limit = 5 } = query;
+    const { data, totalCount, totalPages } = await this.heritageService.findAll(query);
+    return {
+      statusCode: 200,
+      message: 'All heritages fetched successfully',
+      data,
+      meta: {
+        totalCount,
+        totalPages,
+        currentPage: page,
+        limit,
+      },
+    };
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: number) {
-    try {
-      const heritage = await this.heritageService.findOne(id);
-      return {
-        statusCode: 200,
-        message: 'Heritage fetched successfully',
-        data: heritage,
-      };
-    } catch (error) {
-      throw new NotFoundException(`Heritage with ID ${id} not found`);
-    }
+  async findOne(@Param('id') id: string) {
+    const heritage = await this.heritageService.findOne(id);
+    return {
+      statusCode: 200,
+      message: 'Heritage fetched successfully',
+      data: heritage,
+    };
   }
 
-  @Post()
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(['ADMIN'])
-  @UseInterceptors(FilesInterceptor('files'))
+  @Post()
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'images' },
+      { name: 'thumbnail', maxCount: 1 },
+    ]),
+  )
   async create(
     @Body() createHeritageDto: CreateHeritageDto,
-    @UploadedFiles() files: Express.Multer.File[],
+    @UploadedFiles()
+    files: { images?: Express.Multer.File[]; thumbnail: Express.Multer.File[] },
   ) {
-    try {
-      const heritage = await this.heritageService.create(createHeritageDto, files);
-      return {
-        statusCode: 201,
-        message: 'Heritage created successfully',
-        data: heritage,
-      };
-    } catch (error) {
-      throw new BadRequestException('Error creating heritage');
-    }
+    const heritage = await this.heritageService.createHeritage(
+      createHeritageDto,
+      files,
+    );
+    return {
+      statusCode: 201,
+      message: 'Heritage created successfully',
+      data: heritage,
+    };
   }
 
   @Patch(':id')
@@ -135,34 +84,30 @@ export class HeritageController {
   @Roles(['ADMIN'])
   @UseInterceptors(FilesInterceptor('files'))
   async update(
-    @Param('id') id: number,
+    @Param('id') id: string,
     @Body() updateHeritageDto: UpdateHeritageDto,
     @UploadedFiles() files: Express.Multer.File[],
   ) {
-    try {
-      const heritage = await this.heritageService.update(id, updateHeritageDto, files);
-      return {
-        statusCode: 200,
-        message: 'Heritage updated successfully',
-        data: heritage,
-      };
-    } catch (error) {
-      throw new BadRequestException('Error updating heritage');
-    }
+    const heritage = await this.heritageService.update(
+      id,
+      updateHeritageDto,
+      files,
+    );
+    return {
+      statusCode: 200,
+      message: 'Heritage updated successfully',
+      data: heritage,
+    };
   }
 
   @Delete(':id')
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(['ADMIN'])
-  async remove(@Param('id') id: number) {
-    try {
-      await this.heritageService.remove(id);
-      return {
-        statusCode: 200,
-        message: 'Heritage deleted successfully',
-      };
-    } catch (error) {
-      throw new BadRequestException('Error deleting heritage');
-    }
+  async remove(@Param('id') id: string) {
+    await this.heritageService.remove(id);
+    return {
+      statusCode: 200,
+      message: 'Heritage deleted successfully',
+    };
   }
 }

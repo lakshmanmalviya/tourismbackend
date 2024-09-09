@@ -22,8 +22,8 @@ export class SearchQueryDto {
   maxPrice?: number;
 
   @IsOptional()
-  @IsNumber()
-  placeId?: number;
+  @IsString()
+  placeId?: string;
 
   @IsOptional()
   tagIds?: number[];

@@ -1,13 +1,4 @@
-import { IsOptional, IsString, IsNotEmpty } from 'class-validator';
+import { PartialType } from '@nestjs/swagger';
+import { CreatePlaceDto } from './create-place.dto';
 
-export class UpdatePlaceDto {
-  @IsOptional()
-  @IsString()
-  @IsNotEmpty()
-  name?: string;
-
-  @IsOptional()
-  @IsString()
-  @IsNotEmpty()
-  description?: string;
-}
+export class UpdatePlaceDto extends PartialType(CreatePlaceDto) {}

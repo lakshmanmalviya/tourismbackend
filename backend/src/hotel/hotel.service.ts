@@ -15,6 +15,7 @@ import { Hotel } from './hotel.entity';
 import { UpdateHotelDto } from './dto/update-hotel.dto';
 import { Role } from 'src/types/roles.enum';
 import { PaginationDto } from '../common/dto/pagination.dto';
+import { GetHotelDto } from './dto/get-hotel.dto';
 
 @Injectable()
 export class HotelService {
@@ -27,45 +28,41 @@ export class HotelService {
   ) {}
 
   async findAll(
-    ownerId: number,
-    paginationDto: PaginationDto,
-  ): Promise<{ data: Hotel[]; total: number }> {
-    const { page, limit } = paginationDto;
+    query: GetHotelDto,
+  ): Promise<{ data: Hotel[]; total: number; page: number; limit: number }> {
+    const { ownerId, page = 1, limit = 5 } = query;
     const skip = (page - 1) * limit;
 
     try {
       if (ownerId) {
-        const user = await this.userService.findUserById(ownerId);
+        const owner = await this.userService.findUserById(ownerId);
 
         const [hotels, total] = await this.hotelRepository.findAndCount({
-          where: { user, isDeleted: false },
-          relations: ['place', 'user'],
+          where: { owner, isDeleted: false },
           take: limit,
           skip: skip,
         });
 
         if (hotels.length > 0) {
-          return { data: hotels, total };
+          return { data: hotels, total, page, limit };
         }
         throw new NotFoundException('No hotels found for the given user');
       } else {
         const [hotels, total] = await this.hotelRepository.findAndCount({
           where: { isDeleted: false },
-          relations: ['place', 'user'],
           take: limit,
           skip: skip,
         });
-        return { data: hotels, total };
+        return { data: hotels, total, page, limit };
       }
     } catch (error) {
       throw new BadRequestException('Error fetching hotels');
     }
   }
 
-  async findOne(id: number): Promise<Hotel> {
+  async findOne(id: string): Promise<Hotel> {
     const hotel = await this.hotelRepository.findOne({
       where: { id, isDeleted: false },
-      relations: ['place', 'user'],
     });
 
     if (!hotel) {
@@ -77,7 +74,7 @@ export class HotelService {
 
   async findPending(
     paginationDto: PaginationDto,
-  ): Promise<{ data: Hotel[]; total: number }> {
+  ): Promise<{ data: Hotel[]; total: number; page: number; limit: number }> {
     const { page, limit } = paginationDto;
     const skip = (page - 1) * limit;
 
@@ -86,82 +83,27 @@ export class HotelService {
         registrationStatus: RegistrationStatus.PENDING,
         isDeleted: false,
       },
-      relations: ['place', 'user'],
       take: limit,
       skip: skip,
     });
-    return { data: hotels, total };
+    return { data: hotels, total, page, limit };
   }
-
-  async create(
-    createHotelDto: CreateHotelDto,
-    files: Express.Multer.File[],
-  ): Promise<Hotel> {
-    const {
-      name,
-      description,
-      placeId,
-      userId,
-      hotelStarRating,
-      address,
-      availableRooms,
-      price,
-    } = createHotelDto;
-    let registrationStatus = RegistrationStatus.PENDING;
-    const place = await this.placeService.getPlaceById(+placeId);
-
-    if (!place) {
-      throw new NotFoundException(`Place with ID ${placeId} not found`);
-    }
-
-    const user = await this.userService.findUserById(userId);
-
-    if (user.role === 'ADMIN') {
-      registrationStatus = RegistrationStatus.ACCEPTED;
-    }
-    const hotel = this.hotelRepository.create({
-      name,
-      description,
-      place,
-      user: { id: userId },
-      hotelStarRating,
-      address,
-      availableRooms,
-      price,
-      registrationStatus,
-    });
-
-    try {
-      const savedHotel = await this.hotelRepository.save(hotel);
-
-      if (files && files.length > 0) {
-        const uploadPromises = files.map((file) => {
-          const createImageDto = {
-            entityType: EntityType.HOTEL,
-            entityId: savedHotel.id.toString(),
-          };
-          return this.imageService.uploadImage(file, createImageDto);
-        });
-
-        await Promise.all(uploadPromises);
-      }
-
-      return savedHotel;
-    } catch (error) {
-      throw new BadRequestException('Error creating hotel or uploading images');
-    }
-  }
-
   async findByPlaceId(
-    placeId: number,
+    placeId: string,
     paginationDto: PaginationDto,
   ): Promise<{ data: Hotel[]; total: number }> {
     const { page, limit } = paginationDto;
     const skip = (page - 1) * limit;
 
     try {
+      const place = await this.placeService.findById(placeId);
+
+      if (!place) {
+        throw new NotFoundException(`Place with ID ${placeId} not found`);
+      }
+
       const [hotels, total] = await this.hotelRepository.findAndCount({
-        where: { placeId, isDeleted: false },
+        where: { place, isDeleted: false },
         relations: ['place', 'user'],
         take: limit,
         skip: skip,
@@ -172,8 +114,70 @@ export class HotelService {
     }
   }
 
+  async create(
+    createHotelDto: CreateHotelDto,
+    files: { images?: Express.Multer.File[]; thumbnail: Express.Multer.File[] },
+  ): Promise<Hotel> {
+    const {
+      name,
+      description,
+      placeId,
+      userId,
+      hotelStarRating,
+      address,
+      availableRooms,
+      price,
+      websiteLink,
+      mapUrl,
+      contact,
+    } = createHotelDto;
+    const { images, thumbnail } = files;
+
+    let registrationStatus = RegistrationStatus.PENDING;
+    const place = await this.placeService.findById(placeId);
+
+    if (!place) {
+      throw new NotFoundException(`Place with ID ${placeId} not found`);
+    }
+
+    const user = await this.userService.findUserById(userId);
+
+    if (user.role === 'ADMIN') {
+      registrationStatus = RegistrationStatus.ACCEPTED;
+    }
+
+    const hotel = this.hotelRepository.create({
+      name,
+      description,
+      owner: user,
+      hotelStarRating,
+      address,
+      availableRooms,
+      price,
+      place,
+      registrationStatus,
+      websiteLink,
+      mapUrl,
+      contact,
+    });
+    const savedHotel = await this.hotelRepository.save(hotel);
+
+    hotel.thumbnailUrl = await this.imageService.handleThumbnailUpload(
+      hotel.id,
+      EntityType.HOTEL,
+      thumbnail,
+    );
+
+    await this.imageService.handleImagesUpload(
+      savedHotel.id,
+      EntityType.HOTEL,
+      images,
+    );
+    return await this.hotelRepository.save(savedHotel);
+  }
+
   async update(
-    id: number,
+    id: string,
     updateHotelDto: UpdateHotelDto,
     files: Express.Multer.File[],
   ): Promise<Hotel> {
@@ -183,7 +187,9 @@ export class HotelService {
     if (!hotel) {
       throw new NotFoundException('Hotel not found');
     } else {
-      const user = await this.userService.findUserById(hotel.userId);
+      const user = await this.userService.findUserById(
+        hotel.owner.id,
+      );
 
       if (user.role === Role.PROVIDER) {
         hotel.registrationStatus = RegistrationStatus.PENDING;
@@ -193,26 +199,19 @@ export class HotelService {
     hotel.updatedAt = new Date();
 
     try {
-      const updatedHotel = await this.hotelRepository.save(hotel);
-      if (files && files.length > 0) {
-        const uploadPromises = files.map((file) => {
-          const createImageDto = {
-            entityType: EntityType.HOTEL,
-            entityId: updatedHotel.id.toString(),
-          };
-          return this.imageService.uploadImage(file, createImageDto);
-        });
+      await this.imageService.handleImagesUpload(
+        hotel.id,
+        EntityType.HOTEL,
+        files,
+      );
 
-        await Promise.all(uploadPromises);
-      }
-
-      return updatedHotel;
+      return this.hotelRepository.save(hotel);
     } catch (error) {
       throw new BadRequestException('Error updating hotel');
     }
   }
 
-  async updateStatus(id: number, status: RegistrationStatus): Promise<Hotel> {
+  async updateStatus(id: string, status: RegistrationStatus): Promise<Hotel> {
     const hotel = await this.hotelRepository.findOne({
       where: { id, isDeleted: false },
     });
@@ -227,7 +226,7 @@ export class HotelService {
     return this.hotelRepository.save(hotel);
   }
 
-  async softDelete(id: number): Promise<void> {
+  async softDelete(id: string): Promise<void> {
     const hotel = await this.hotelRepository.findOne({
       where: { id, isDeleted: false },
     });
