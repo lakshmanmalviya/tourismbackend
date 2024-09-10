@@ -23,7 +23,7 @@ export class CreateHotelDto {
   @IsUrl()
   websiteLink?: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   mapUrl: string;
 
   @IsInt()

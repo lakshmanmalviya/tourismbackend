@@ -1,9 +1,15 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  OneToMany,
+  JoinColumn,
+} from 'typeorm';
 import { Heritage } from 'src/heritage/heritage.entity';
 
 @Entity()
 export class Place {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column()
@@ -15,13 +21,12 @@ export class Place {
   @Column({ default: false })
   isDeleted: boolean;
 
-  @Column({nullable: true}) 
+  @Column({ nullable: true })
   thumbnailUrl: string;
 
-  @Column({ length: 1000}) 
+  @Column({ length: 1000 })
   mapUrl: string;
 
-  @OneToMany(() => Heritage, heritags => heritags.place, {eager: true, cascade: true})
-  heritages: Heritage[]
+  @OneToMany(() => Heritage, (heritags) => heritags.place, { cascade: true })
+  heritages: Heritage[];
 }
-

@@ -62,24 +62,25 @@ export class ImageService {
       throw error;
     }
   }
-  async deleteImage(publicID: string): Promise<void> {
+  async deleteImageByUrl(url: string): Promise<void> {
     try {
-      const image = await this.imageRepository.findOne({ where: { publicID } });
-
+      const image = await this.imageRepository.findOne({ where: { imageLink: url } });
+      console.log( " image found with image url" , image)
       if (!image) {
         throw new NotFoundException('Image not found');
       }
 
-      await cloudinary.uploader.destroy(publicID);
-      await this.imageRepository.delete(image.id);
+      image.isDeleted = true;
+      await this.imageRepository.save(image);
+      
     } catch (error) {
       throw error;
     }
   }
 
-  async deleteImagesByEntity(entityId: string): Promise<void> {
+  async deleteImagesByEntity(entityId: string, entityType: EntityType): Promise<void> {
     const images = await this.imageRepository.find({
-      where: { entityId },
+      where: { entityId, entityType },
     });
 
     if (images.length === 0) {
@@ -87,7 +88,8 @@ export class ImageService {
     }
 
     for (const image of images) {
-      await this.imageRepository.delete(image.id);
+      image.isDeleted = true;
+      await this.imageRepository.save(image);
     }
   }
   async handleThumbnailUpload(
@@ -95,6 +97,8 @@ export class ImageService {
     entityType: EntityType,
     thumbnail: Express.Multer.File[],
   ): Promise<string>{
+
+    console.log ( "this is thumbnail upload id " + entityId + "  this is entityType  " + entityType + " this is thumbnail " + thumbnail)
     if (thumbnail && thumbnail.length > 0) {
       const thumbnailFile = thumbnail[0];
 
@@ -103,10 +107,14 @@ export class ImageService {
         entityId,
       };
 
+      console.log ( ' this is createThumbnailDto" ' + createThumbnailDto)
+
       const thumbnailUploadResult = await this.uploadImage(
         thumbnailFile,
         createThumbnailDto,
       );
+
+      console.log( " this is thumbnailUploadResult" , thumbnailUploadResult)
       return thumbnailUploadResult;
     }
   }

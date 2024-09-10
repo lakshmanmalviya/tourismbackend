@@ -31,7 +31,7 @@ export class HotelController {
 
   @Get()
   async findAll(
-    @Query('query') query: GetHotelDto,
+    @Query() query: GetHotelDto,
   ) {
     try {
       const hotels = await this.hotelService.findAll(query);
@@ -39,9 +39,9 @@ export class HotelController {
         statusCode: 200,
         message: 'Hotels fetched successfully',
         data: hotels.data,
-        total: hotels.total,
-        page: hotels.page,
-        limit: hotels.limit,
+        totalCount: hotels.totalCount,
+        totalPages: hotels.totalPages,
+        limit: query.limit,
       };
     } catch (error) {
       throw new BadRequestException('Error fetching hotels', error.message);
@@ -50,9 +50,10 @@ export class HotelController {
 
   @Get('pending')
   async findPending(
-    @Query('query') query: PaginationDto
+    @Query() query: PaginationDto
   ) {
     try {
+      console.log( " pending query ...." , query )
       const hotels = await this.hotelService.findPending(query);
       return {
         statusCode: 200,
@@ -95,11 +96,10 @@ export class HotelController {
     @UploadedFiles()
     files: { images?: Express.Multer.File[]; thumbnail: Express.Multer.File[] },
   ) {
-    try {
-      if (!files || files.thumbnail.length === 0) {
-        throw new BadRequestException('At least one file is required');
+      if (!files.thumbnail) {
+        throw new BadRequestException('thumbnail is required');
       }
-
+      
       const transformedDto = plainToInstance(CreateHotelDto, createHotelDto);
       await validateOrReject(transformedDto);
 
@@ -109,19 +109,17 @@ export class HotelController {
         message: 'Hotel created successfully with images',
         data: hotel,
       };
-    } catch (error) {
-      throw new BadRequestException('Error creating hotel');
-    }
+   
   }
 
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(['ADMIN', 'PROVIDER'])
   @Patch(':id')
-  @UseInterceptors(FilesInterceptor('files'))
+  @UseInterceptors(FilesInterceptor('thumbnail'))
   async update(
     @Param('id') id: string,
     @Body() updateHotelDto: Record<string, any>,
-    @UploadedFiles() files: Express.Multer.File[],
+    @UploadedFiles() thumbnail: Express.Multer.File[],
   ) {
     try {
       const transformedDto = plainToInstance(UpdateHotelDto, updateHotelDto);
@@ -130,7 +128,7 @@ export class HotelController {
       const updatedHotel = await this.hotelService.update(
         id,
         transformedDto,
-        files,
+        thumbnail,
       );
       return {
         statusCode: 200,

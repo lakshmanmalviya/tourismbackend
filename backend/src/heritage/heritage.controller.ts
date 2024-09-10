@@ -10,6 +10,7 @@ import {
   Delete,
   Get,
   Query,
+  BadRequestException,
 } from '@nestjs/common';
 import {
   FileFieldsInterceptor,
@@ -30,7 +31,8 @@ export class HeritageController {
   @Get()
   async findAll(@Query() query: PaginationDto) {
     const { page = 1, limit = 5 } = query;
-    const { data, totalCount, totalPages } = await this.heritageService.findAll(query);
+    const { data, totalCount, totalPages } =
+      await this.heritageService.findAll(query);
     return {
       statusCode: 200,
       message: 'All heritages fetched successfully',
@@ -68,6 +70,10 @@ export class HeritageController {
     @UploadedFiles()
     files: { images?: Express.Multer.File[]; thumbnail: Express.Multer.File[] },
   ) {
+    if (!files.thumbnail) {
+      throw new BadRequestException('Thumbnail is required');
+    }
+
     const heritage = await this.heritageService.createHeritage(
       createHeritageDto,
       files,
@@ -82,16 +88,16 @@ export class HeritageController {
   @Patch(':id')
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(['ADMIN'])
-  @UseInterceptors(FilesInterceptor('files'))
+  @UseInterceptors(FilesInterceptor('thumbnail'))
   async update(
     @Param('id') id: string,
     @Body() updateHeritageDto: UpdateHeritageDto,
-    @UploadedFiles() files: Express.Multer.File[],
+    @UploadedFiles() thumbnail?: Express.Multer.File[],
   ) {
     const heritage = await this.heritageService.update(
       id,
       updateHeritageDto,
-      files,
+      thumbnail,
     );
     return {
       statusCode: 200,

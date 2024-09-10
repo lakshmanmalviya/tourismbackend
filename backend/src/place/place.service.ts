@@ -20,12 +20,12 @@ export class PlaceService {
     private readonly imageService: ImageService,
     @InjectDataSource() private readonly datasource: DataSource,
   ) {}
-  
-  async findById(id: string): Promise<Place> {
+
+  async findPlaceByIdWithImages(id: string): Promise<Place> {
     const place = await this.datasource.query(
       `SELECT p.*,
               (SELECT JSON_ARRAYAGG(
-                          JSON_OBJECT('imageLink', img.imageLink, 'publicId', img.publicId)
+                          JSON_OBJECT('imageLink', img.imageLink, 'id', img.id)
                       )
                FROM image img 
                WHERE img.entityId = p.id 
@@ -33,7 +33,7 @@ export class PlaceService {
                AND img.isDeleted = false
               ) AS images
        FROM place p
-       WHERE p.id = ?`,
+       WHERE p.id = ? AND p.isDeleted = false`,
       [id],
     );
 
@@ -46,34 +46,16 @@ export class PlaceService {
 
   //Find place without images
   async findPlaceDetailsById(id: string): Promise<Place> {
-    const place = await this.datasource.query(
-      `SELECT p.id, p.name, p.description, p.thumbnailUrl 
-       FROM place p
-       WHERE p.id = ?`,
-      [id],
-    );
-  
-    if (!place.length) {
+    const place = await this.placeRepository.findOne({
+      where: { id, isDeleted: false },
+    });
+
+    if (!place) {
       throw new NotFoundException(`Place with ID ${id} not found`);
     }
-  
-    return place[0];
+
+    return place;
   }
-
-  // async findById(id: string): Promise<Place> {
-  //   const place = await this.datasource.query(
-  //     `SELECT p.* , img.imageLink, img.publicId
-  //       FROM place p
-  //       INNER JOIN image img ON p.id = img.entityId AND img.entityType = 'PLACE' AND img.isDeleted = false
-  //       WHERE p.id = ?`,
-  //     [id],
-  //   );
-
-  //   if (!place) {
-  //     throw new NotFoundException(`Place with ID ${id} not found`);
-  //   }
-  //   return place;
-  // }
 
   async findAll(paginationDto: PaginationDto): Promise<{
     data: Place[];
@@ -88,7 +70,7 @@ export class PlaceService {
     const places = await this.datasource.query(
       `SELECT p.*, 
               GROUP_CONCAT(
-                  JSON_OBJECT('imageLink', img.imageLink, 'publicId', img.publicId) 
+                  JSON_OBJECT('imageLink', img.imageLink, 'id', img.id) 
                   ORDER BY img.imageLink ASC
               ) as images
        FROM place p
@@ -96,6 +78,7 @@ export class PlaceService {
        ON p.id = img.entityId 
        AND img.entityType = 'PLACE' 
        AND img.isDeleted = false
+       WHERE p.isDeleted = false
        GROUP BY p.id
        ORDER BY p.id
        LIMIT ? OFFSET ?`,
@@ -124,45 +107,6 @@ export class PlaceService {
     };
   }
 
-  // async findAll(paginationDto: PaginationDto): Promise<{
-  //   data: Place[];
-  //   totalCount: number;
-  //   totalPages: number;
-  // }> {
-  //   const { page, limit } = paginationDto;
-  //   const pageNumber = Math.max(1, page);
-  //   const pageSize = Math.max(1, limit);
-  //   const offset = (pageNumber - 1) * pageSize;
-
-  //   const places = await this.datasource.query(
-  //     `SELECT p.*, img.imageLink, img.publicId
-  //      FROM place p
-  //      LEFT JOIN image img
-  //      ON p.id = img.entityId AND img.entityType = 'PLACE'
-  //      AND
-  //      img.isDeleted = false
-  //      ORDER BY p.id
-  //      LIMIT ? OFFSET ?`,
-  //     [pageSize, offset],
-  //   );
-
-  //   const [totalCountResult] = await this.datasource.query(
-  //     `SELECT COUNT(DISTINCT p.id) as totalCount
-  //      FROM place p
-  //      LEFT JOIN image img
-  //      ON p.id = img.entityId AND img.entityType = 'PLACE' AND img.isDeleted = false`,
-  //   );
-
-  //   const totalCount = parseInt(totalCountResult.totalCount, 10);
-  //   const totalPages = Math.ceil(totalCount / pageSize);
-
-  //   return {
-  //     data: places,
-  //     totalCount,
-  //     totalPages,
-  //   };
-  // }
-
   async createPlace(
     createPlaceDto: CreatePlaceDto,
     files: { images?: Express.Multer.File[]; thumbnail: Express.Multer.File[] },
@@ -190,11 +134,22 @@ export class PlaceService {
   async updatePlace(
     id: string,
     updatePlaceDto: UpdatePlaceDto,
+    thumbnail: Express.Multer.File[],
   ): Promise<Place> {
-    const place = await this.placeRepository.findOne({ where: { id } });
+    const place = await this.placeRepository.findOne({ where: { id, isDeleted: false } });
 
     if (!place) {
       throw new NotFoundException(`Place with id ${id} not found`);
+    }
+
+    if (thumbnail) {
+      await this.imageService.deleteImageByUrl(place.thumbnailUrl);
+  
+      place.thumbnailUrl = await this.imageService.handleThumbnailUpload(
+        place.id,
+        EntityType.PLACE,
+        thumbnail,
+      );
     }
 
     Object.assign(place, updatePlaceDto);
@@ -203,15 +158,16 @@ export class PlaceService {
   }
 
   async deletePlace(id: string): Promise<void> {
-    const place = await this.placeRepository.findOne({ where: { id } });
+    const place = await this.placeRepository.findOne({ where: { id , isDeleted: false} });
 
     if (!place) {
       throw new NotFoundException(`Place with ID ${id} not found`);
     }
 
     try {
-      await this.imageService.deleteImagesByEntity(id);
-      await this.placeRepository.delete(id);
+      await this.imageService.deleteImagesByEntity(id, EntityType.PLACE);
+      place.isDeleted = true;
+      await this.placeRepository.save(place);
     } catch (error) {
       throw new BadRequestException(
         'Error deleting place or associated images',

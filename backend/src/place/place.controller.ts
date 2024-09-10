@@ -12,7 +12,9 @@ import {
   Get,
   Query,
 } from '@nestjs/common';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import {
+  FileFieldsInterceptor,
+} from '@nestjs/platform-express';
 import { PlaceService } from './place.service';
 import { CreatePlaceDto } from './dto/create-place.dto';
 import { UpdatePlaceDto } from './dto/update-place.dto';
@@ -43,7 +45,7 @@ export class PlaceController {
 
   @Get(':id')
   async getPlaceById(@Param('id') id: string) {
-    const place = await this.placeService.findById(id);
+    const place = await this.placeService.findPlaceByIdWithImages(id);
     return {
       statusCode: 200,
       message: 'Place fetched successfully',
@@ -81,14 +83,18 @@ export class PlaceController {
 
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(['ADMIN'])
+  @UseInterceptors(FileFieldsInterceptor([{ name: 'thumbnail', maxCount: 1 }]))
   @Patch(':id')
   async updatePlace(
     @Param('id') id: string,
-    @Body() updatePlaceDto: UpdatePlaceDto,
+    updatePlaceDto: UpdatePlaceDto,
+    @UploadedFiles()
+    files: { thumbnail: Express.Multer.File[] },
   ) {
     const updatedPlace = await this.placeService.updatePlace(
       id,
       updatePlaceDto,
+      files.thumbnail,
     );
     return {
       statusCode: 200,

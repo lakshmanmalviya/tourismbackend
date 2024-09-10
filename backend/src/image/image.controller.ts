@@ -20,20 +20,6 @@ import { AuthGuard } from '../auth/auth.guard';
 export class ImageController {
   constructor(private readonly imageService: ImageService) {}
   
-  // @Get(':entityId')
-  // async getImagesByEntity(@Param('entityId') entityId: string) {
-  //   try {
-  //     const images = await this.imageService.getImagesByEntity(entityId);
-  //     return {
-  //       statusCode: 200,
-  //       message: 'Images retrieved successfully',
-  //       data: images,
-  //     };
-  //   } catch(error) {
-  //     throw new NotFoundException(error.message);
-  //   }
-    
-  // }
   @UseGuards(AuthGuard)
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
@@ -59,10 +45,10 @@ export class ImageController {
   }
 
   @UseGuards(AuthGuard)
-  @Delete(':publicID')
-  async deleteImage(@Param('publicID') publicID: string) {
+  @Delete(':imageUrl')
+  async deleteImage(@Param('imageUrl') imageUrl: string) {
     try {
-      await this.imageService.deleteImage(publicID);
+      await this.imageService.deleteImageByUrl(imageUrl);
 
       return {
         statusCode: 200,

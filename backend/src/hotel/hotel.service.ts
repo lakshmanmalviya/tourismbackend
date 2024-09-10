@@ -3,8 +3,8 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { CreateHotelDto } from './dto/create-hotel.dto';
 import { ImageService } from '../image/image.service';
 import { PlaceService } from '../place/place.service';
@@ -25,92 +25,382 @@ export class HotelService {
     private readonly imageService: ImageService,
     private readonly placeService: PlaceService,
     private readonly userService: UserService,
+    @InjectDataSource() private readonly datasource: DataSource,
   ) {}
 
-  async findAll(
-    query: GetHotelDto,
-  ): Promise<{ data: Hotel[]; total: number; page: number; limit: number }> {
-    const { ownerId, page = 1, limit = 5 } = query;
-    const skip = (page - 1) * limit;
+  // async findAll(
+  //   query: GetHotelDto,
+  // ): Promise<{ data: Hotel[]; total: number; page: number; limit: number }> {
+  //   const { ownerId, page = 1, limit = 5 } = query;
+  //   const skip = (page - 1) * limit;
+
+  //   try {
+  //     if (ownerId) {
+  //       const owner = await this.userService.findUserById(ownerId);
+
+  //       const [hotels, total] = await this.hotelRepository.findAndCount({
+  //         where: { owner, isDeleted: false },
+  //         take: limit,
+  //         skip: skip,
+  //       });
+
+  //       if (hotels.length > 0) {
+  //         return { data: hotels, total, page, limit };
+  //       }
+  //       throw new NotFoundException('No hotels found for the given user');
+  //     } else {
+  //       const [hotels, total] = await this.hotelRepository.findAndCount({
+  //         where: { isDeleted: false },
+  //         take: limit,
+  //         skip: skip,
+  //       });
+  //       return { data: hotels, total, page, limit };
+  //     }
+  //   } catch (error) {
+  //     throw new BadRequestException('Error fetching hotels');
+  //   }
+  // }
+
+  //    async findAll(paginationDto: PaginationDto): Promise<{
+  //     data: Hotel[];
+  //     totalCount: number;
+  //     totalPages: number;
+  //   }> {
+  //     const { page, limit } = paginationDto;
+  //     const pageNumber = Math.max(1, page);
+  //     const pageSize = Math.max(1, limit);
+  //     const offset = (pageNumber - 1) * pageSize;
+  // console.log( "this is running .... hotel find all " )
+  //     try {
+
+  //       const hotels = await this.datasource.query(`SELECT h.*,
+  //                JSON_OBJECT(
+  //                  'id', p.id,
+  //                  'name', p.name,
+  //                  'description', p.description
+  //                ) AS place,
+  //                JSON_OBJECT(
+  //                  'id', u.id,
+  //                  'name', u.name,
+  //                  'email', u.email,
+  //                  'role', u.role
+  //                ) AS owner,
+  //                COALESCE(
+  //                  JSON_ARRAYAGG(
+  //                    JSON_OBJECT('id', img.id, 'link', img.imageLink)
+  //                  ), '[]'
+  //                ) AS images
+  //         FROM hotel h
+  //         LEFT JOIN place p ON h.placeId = p.id
+  //         LEFT JOIN user u ON h.ownerId = u.id
+  //         LEFT JOIN image img ON img.entityId = h.id
+  //                            AND img.entityType = 'HOTEL'
+  //                            AND img.isDeleted = false
+  //         WHERE h.isDeleted = false
+  //         GROUP BY h.id, p.id, u.id
+  //         ORDER BY h.id
+  //         LIMIT ? OFFSET ?`,
+  //         [pageSize] [offset],);
+
+  //       const [totalCountResult] = await this.datasource.query(
+  //         `SELECT COUNT(*) AS totalCount FROM hotel WHERE isDeleted = false`,
+  //       );
+
+  //       const totalCount = parseInt(totalCountResult.totalCount, 10);
+  //       const totalPages = Math.ceil(totalCount / pageSize);
+
+  //       const formattedHotels = hotels.map((hotel: any) => ({
+  //         ...hotel,
+  //         images: hotel.images ? JSON.parse(hotel.images) : [],
+  //       }));
+
+  //       return {
+  //         data: formattedHotels,
+  //         totalCount,
+  //         totalPages,
+  //       };
+  //     } catch (error) {
+  //       console.error('Error in findAll:', error);
+
+  //     }
+  //   }
+
+  // async findAll(queryParam: GetHotelDto): Promise<{
+  //   data: Hotel[];
+  //   totalCount: number;
+  //   totalPages: number;
+  // }> {
+  //   const { page, limit, ownerId } = queryParam;
+  //   const pageNumber = Math.max(1, page);
+  //   const pageSize = Math.max(1, limit);
+  //   const offset = (pageNumber - 1) * pageSize;
+
+  //   if ( ownerId) {
+  //     const owner = await this.userService.findUserById(ownerId);
+
+  //     console.log(owner)
+  //   }
+
+  //   try {
+  //     const hotels = await this.datasource.query(
+  //       `SELECT h.*,
+  //                JSON_OBJECT(
+  //                  'id', p.id,
+  //                  'name', p.name,
+  //                  'description', p.description
+  //                ) AS place,
+  //                JSON_OBJECT(
+  //                  'id', u.id,
+  //                  'name', u.username,
+  //                  'email', u.email,
+  //                  'role', u.role
+  //                ) AS owner,
+  //                COALESCE(
+  //                  JSON_ARRAYAGG(
+  //                    JSON_OBJECT('id', img.id, 'link', img.imageLink)
+  //                  ), '[]'
+  //                ) AS images
+  //         FROM hotel h
+  //         LEFT JOIN place p ON h.placeId = p.id
+  //         LEFT JOIN user u ON h.ownerId = u.id
+  //         LEFT JOIN image img ON img.entityId = h.id
+  //                            AND img.entityType = 'HOTEL'
+  //                            AND img.isDeleted = false
+  //         WHERE h.isDeleted = false
+  //         GROUP BY h.id, p.id, u.id
+  //         ORDER BY h.id
+  //         LIMIT ? OFFSET ?`,
+  //       [pageSize, offset]
+  //     );
+
+  //     const [totalCountResult] = await this.datasource.query(
+  //       `SELECT COUNT(*) AS totalCount FROM hotel WHERE isDeleted = false`,
+  //     );
+
+  //     const totalCount = parseInt(totalCountResult.totalCount, 10);
+  //     const totalPages = Math.ceil(totalCount / pageSize);
+
+  //     const formattedHotels = hotels.map((hotel: any) => ({
+  //       ...hotel,
+  //       images: hotel.images ? JSON.parse(hotel.images) : [],
+  //     }));
+
+  //     return {
+  //       data: formattedHotels,
+  //       totalCount,
+  //       totalPages,
+  //     };
+  //   } catch (error) {
+  //     console.error('Error in findAll:', error);
+
+  //   }
+  // }
+
+  async findAll(queryParam: GetHotelDto): Promise<{
+    data: Hotel[];
+    totalCount: number;
+    totalPages: number;
+  }> {
+    const { page = 1, limit = 5, ownerId } = queryParam;
+    const pageNumber = page;
+    const pageSize = limit;
+    const offset = (pageNumber - 1) * pageSize;
+
+    let baseQuery = `
+    SELECT h.*,
+           JSON_OBJECT(
+             'id', p.id,
+             'name', p.name,
+             'description', p.description
+           ) AS place,
+           JSON_OBJECT(
+             'id', u.id,
+             'name', u.username,
+             'email', u.email,
+             'role', u.role
+           ) AS owner,
+           COALESCE(
+             JSON_ARRAYAGG(
+               JSON_OBJECT('id', img.id, 'link', img.imageLink)
+             ), '[]'
+           ) AS images
+    FROM hotel h
+    LEFT JOIN place p ON h.placeId = p.id
+    LEFT JOIN user u ON h.ownerId = u.id
+    LEFT JOIN image img ON img.entityId = h.id
+                       AND img.entityType = 'HOTEL'
+                       AND img.isDeleted = false
+    WHERE h.isDeleted = false
+  `;
+
+    if (ownerId) {
+      baseQuery += ` AND h.ownerId = ? `;
+    }
+
+    baseQuery += `
+    GROUP BY h.id, p.id, u.id
+    ORDER BY h.id
+    LIMIT ? OFFSET ?
+  `;
 
     try {
+      const queryParams = ownerId
+        ? [ownerId, pageSize, offset]
+        : [pageSize, offset];
+
+      const hotels = await this.datasource.query(baseQuery, queryParams);
+
+      let countQuery = `SELECT COUNT(*) AS totalCount FROM hotel WHERE isDeleted = false`;
+      const countParams = [];
       if (ownerId) {
-        const owner = await this.userService.findUserById(ownerId);
-
-        const [hotels, total] = await this.hotelRepository.findAndCount({
-          where: { owner, isDeleted: false },
-          take: limit,
-          skip: skip,
-        });
-
-        if (hotels.length > 0) {
-          return { data: hotels, total, page, limit };
-        }
-        throw new NotFoundException('No hotels found for the given user');
-      } else {
-        const [hotels, total] = await this.hotelRepository.findAndCount({
-          where: { isDeleted: false },
-          take: limit,
-          skip: skip,
-        });
-        return { data: hotels, total, page, limit };
+        countQuery += ` AND ownerId = ?`;
+        countParams.push(ownerId);
       }
+
+      const [totalCountResult] = await this.datasource.query(
+        countQuery,
+        countParams,
+      );
+
+      const totalCount = parseInt(totalCountResult.totalCount, 10);
+      const totalPages = Math.ceil(totalCount / pageSize);
+
+      const formattedHotels = hotels.map((hotel: any) => ({
+        ...hotel,
+        images: hotel.images ? JSON.parse(hotel.images) : [],
+      }));
+
+      return {
+        data: formattedHotels,
+        totalCount,
+        totalPages,
+      };
     } catch (error) {
-      throw new BadRequestException('Error fetching hotels');
+      console.error('Error in findAll:', error);
     }
   }
 
   async findOne(id: string): Promise<Hotel> {
-    const hotel = await this.hotelRepository.findOne({
-      where: { id, isDeleted: false },
-    });
+    const hotelResult = await this.datasource.query(
+      `SELECT h.*,
+                 JSON_OBJECT(
+                   'id', p.id,
+                   'name', p.name,
+                   'description', p.description
+                 ) AS place,
+                 JSON_OBJECT(
+                   'id', u.id,
+                   'name', u.username,
+                   'email', u.email,
+                   'role', u.role
+                 ) AS owner,
+                 COALESCE(
+                   JSON_ARRAYAGG(
+                     JSON_OBJECT('id', img.id, 'link', img.imageLink)
+                   ), '[]'
+                 ) AS images
+          FROM hotel h
+          LEFT JOIN place p ON h.placeId = p.id
+          LEFT JOIN user u ON h.ownerId = u.id
+          LEFT JOIN image img ON img.entityId = h.id
+                             AND img.entityType = 'HOTEL'
+                             AND img.isDeleted = false
+          WHERE h.isDeleted = false
+          AND h.id = ?
+          GROUP BY h.id, p.id, u.id`,
+      [id],
+    );
 
-    if (!hotel) {
+    if (!hotelResult || hotelResult.length === 0) {
       throw new NotFoundException('Hotel not found');
     }
 
-    return hotel;
+    const hotel = hotelResult[0];
+
+    return {
+      ...hotel,
+      images: hotel.images ? JSON.parse(hotel.images) : [],
+    };
   }
+
+  // async findPending(
+  //   paginationDto: PaginationDto,
+  // ): Promise<{ data: Hotel[]; total: number; page: number; limit: number }> {
+  //   const { page, limit } = paginationDto;
+  //   const skip = (page - 1) * limit;
+
+  //   const [hotels, total] = await this.hotelRepository.findAndCount({
+  //     where: {
+  //       registrationStatus: RegistrationStatus.PENDING,
+  //       isDeleted: false,
+  //     },
+  //     take: limit,
+  //     skip: skip,
+  //   });
+  //   return { data: hotels, total, page, limit };
+  // }
 
   async findPending(
     paginationDto: PaginationDto,
   ): Promise<{ data: Hotel[]; total: number; page: number; limit: number }> {
     const { page, limit } = paginationDto;
-    const skip = (page - 1) * limit;
-
-    const [hotels, total] = await this.hotelRepository.findAndCount({
-      where: {
-        registrationStatus: RegistrationStatus.PENDING,
-        isDeleted: false,
-      },
-      take: limit,
-      skip: skip,
-    });
-    return { data: hotels, total, page, limit };
-  }
-  async findByPlaceId(
-    placeId: string,
-    paginationDto: PaginationDto,
-  ): Promise<{ data: Hotel[]; total: number }> {
-    const { page, limit } = paginationDto;
-    const skip = (page - 1) * limit;
+    const pageNumber = Math.max(1, page);
+    const pageSize = Math.max(1, limit);
+    const offset = (pageNumber - 1) * pageSize;
 
     try {
-      const place = await this.placeService.findById(placeId);
+      const hotels = await this.datasource.query(
+        `SELECT h.*,
+                 JSON_OBJECT(
+                   'id', p.id,
+                   'name', p.name,
+                   'description', p.description
+                 ) AS place,
+                 JSON_OBJECT(
+                   'id', u.id,
+                   'name', u.username,
+                   'email', u.email,
+                   'role', u.role
+                 ) AS owner,
+                 COALESCE(
+                   JSON_ARRAYAGG(
+                     JSON_OBJECT('id', img.id, 'link', img.imageLink)
+                   ), '[]'
+                 ) AS images
+          FROM hotel h
+          LEFT JOIN place p ON h.placeId = p.id
+          LEFT JOIN user u ON h.ownerId = u.id
+          LEFT JOIN image img ON img.entityId = h.id
+                             AND img.entityType = 'HOTEL'
+                             AND img.isDeleted = false
+          WHERE h.isDeleted = false
+          AND h.registrationStatus = 'PENDING'
+          GROUP BY h.id, p.id, u.id
+          LIMIT ? OFFSET ?`,
+        [pageSize, offset],
+      );
 
-      if (!place) {
-        throw new NotFoundException(`Place with ID ${placeId} not found`);
-      }
+      const [totalCountResult] = await this.datasource.query(
+        `SELECT COUNT(*) AS totalCount FROM hotel 
+         WHERE isDeleted = false 
+         AND registrationStatus = 'PENDING'`,
+      );
 
-      const [hotels, total] = await this.hotelRepository.findAndCount({
-        where: { place, isDeleted: false },
-        relations: ['place', 'user'],
-        take: limit,
-        skip: skip,
-      });
-      return { data: hotels, total };
-    } catch (err) {
-      throw new BadRequestException('Error fetching hotels by place id');
+      const total = parseInt(totalCountResult.totalCount, 10);
+
+      const formattedHotels = hotels.map((hotel: any) => ({
+        ...hotel,
+        images: hotel.images ? JSON.parse(hotel.images) : [],
+      }));
+
+      return {
+        data: formattedHotels,
+        total,
+        page: pageNumber,
+        limit: pageSize,
+      };
+    } catch (error) {
+      console.error('Error in findPending:', error);
     }
   }
 
@@ -133,18 +423,13 @@ export class HotelService {
     } = createHotelDto;
     const { images, thumbnail } = files;
 
-    let registrationStatus = RegistrationStatus.PENDING;
-    const place = await this.placeService.findById(placeId);
+    const place = await this.placeService.findPlaceDetailsById(placeId);
 
     if (!place) {
       throw new NotFoundException(`Place with ID ${placeId} not found`);
     }
 
     const user = await this.userService.findUserById(userId);
-
-    if (user.role === 'ADMIN') {
-      registrationStatus = RegistrationStatus.ACCEPTED;
-    }
 
     const hotel = this.hotelRepository.create({
       name,
@@ -155,11 +440,15 @@ export class HotelService {
       availableRooms,
       price,
       place,
-      registrationStatus,
       websiteLink,
       mapUrl,
       contact,
     });
+
+    if (user.role === 'ADMIN') {
+      hotel.registrationStatus = RegistrationStatus.ACCEPTED;
+    } else hotel.registrationStatus = RegistrationStatus.PENDING;
+
     const savedHotel = await this.hotelRepository.save(hotel);
 
     hotel.thumbnailUrl = await this.imageService.handleThumbnailUpload(
@@ -168,7 +457,7 @@ export class HotelService {
       thumbnail,
     );
 
-    await this.imageService.handleImagesUpload(
+    this.imageService.handleImagesUpload(
       savedHotel.id,
       EntityType.HOTEL,
       images,
@@ -179,36 +468,33 @@ export class HotelService {
   async update(
     id: string,
     updateHotelDto: UpdateHotelDto,
-    files: Express.Multer.File[],
+    thumbnail: Express.Multer.File[],
   ): Promise<Hotel> {
     const hotel = await this.hotelRepository.findOne({
-      where: { id, isDeleted: false },
+      where: { id, isDeleted: false },relations: {owner: true},
     });
+
     if (!hotel) {
       throw new NotFoundException('Hotel not found');
-    } else {
-      const user = await this.userService.findUserById(
-        hotel.owner.id,
-      );
-
-      if (user.role === Role.PROVIDER) {
-        hotel.registrationStatus = RegistrationStatus.PENDING;
-      }
     }
+    const user = await this.userService.findUserById(hotel.owner.id);
+
+    if (user.role === Role.PROVIDER) {
+      hotel.registrationStatus = RegistrationStatus.PENDING;
+    }
+
+    if (thumbnail) {
+      hotel.thumbnailUrl = await this.imageService.handleThumbnailUpload(
+        hotel.id,
+        EntityType.HOTEL,
+        thumbnail,
+      );
+    }
+
     Object.assign(hotel, updateHotelDto);
     hotel.updatedAt = new Date();
 
-    try {
-      await this.imageService.handleImagesUpload(
-        hotel.id,
-        EntityType.HOTEL,
-        files,
-      );
-
-      return this.hotelRepository.save(hotel);
-    } catch (error) {
-      throw new BadRequestException('Error updating hotel');
-    }
+    return this.hotelRepository.save(hotel);
   }
 
   async updateStatus(id: string, status: RegistrationStatus): Promise<Hotel> {

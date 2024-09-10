@@ -10,7 +10,7 @@ export class CreateHeritageDto {
   description: string;
 
   @IsString()
-  tagIds: string;
+  tags: string;
   
   @IsString()
   @IsNotEmpty()

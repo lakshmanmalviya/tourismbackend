@@ -1,9 +1,5 @@
-
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
-import {
-  InjectDataSource,
-  InjectRepository,
-} from '@nestjs/typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { Heritage } from 'src/heritage/heritage.entity';
 import { Hotel } from 'src/hotel/hotel.entity';
 import { Place } from 'src/place/place.entity';
@@ -59,23 +55,47 @@ export class SearchService {
   private async searchAllEntities(query: SearchQueryDto) {
     const page = query.page || 1;
     const limit = query.limit || 10;
-
     const offset = (page - 1) * limit;
 
     const allData = await this.datasource.query(
       `SELECT * FROM 
-      (SELECT name, description, 'PLACE' as entity FROM place 
-      UNION 
-      SELECT name, description, 'HERITAGE' as entity FROM heritage 
-      UNION 
-      SELECT name, description, 'HOTEL' as entity FROM hotel) 
+      (SELECT p.name, p.description, 'PLACE' AS entity, p.thumbnailUrl
+       FROM place p
+       WHERE p.name LIKE "%${query.keyword}%" AND p.isDeleted = false
+       GROUP BY p.id
+       UNION 
+       SELECT h.name, h.description, 'HOTEL' AS entity,  h.thumbnailUrl
+       FROM hotel h
+       WHERE h.name LIKE "%${query.keyword}%" AND h.isDeleted = false
+       GROUP BY h.id
+       UNION 
+       SELECT her.name, her.description, 'HERITAGE' AS entity, her.thumbnailUrl
+       FROM heritage her
+       WHERE her.name LIKE "%${query.keyword}%" AND her.isDeleted = false
+       GROUP BY her.id) 
       AS A 
-      WHERE A.name LIKE "%${query.keyword}%"
-      LIMIT ${limit} OFFSET ${offset}`,
+      LIMIT ? OFFSET ?`,
+      [limit, offset],
     );
 
-    this.logger.debug('data from query : is ', allData);
-    return  allData;
+    const [totalCountResult] = await this.datasource.query(
+      `SELECT COUNT(*) AS totalCount FROM 
+      (SELECT id FROM place WHERE isDeleted = false AND name LIKE "%${query.keyword}%"
+       UNION
+       SELECT id FROM heritage WHERE isDeleted = false AND name LIKE "%${query.keyword}%"
+       UNION
+       SELECT id FROM hotel WHERE isDeleted = false AND name LIKE "%${query.keyword}%") 
+      AS TotalEntities`,
+    );
+
+    const total = parseInt(totalCountResult.totalCount, 10);
+
+    return {
+      data: allData,
+      total,
+      page,
+      limit,
+    };
   }
 
   private async searchPlaces(query: SearchQueryDto) {
