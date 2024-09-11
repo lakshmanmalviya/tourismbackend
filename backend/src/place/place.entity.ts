@@ -3,7 +3,6 @@ import {
   Column,
   PrimaryGeneratedColumn,
   OneToMany,
-  JoinColumn,
 } from 'typeorm';
 import { Heritage } from 'src/heritage/heritage.entity';
 

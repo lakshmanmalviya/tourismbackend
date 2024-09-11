@@ -13,6 +13,8 @@ import {
 } from 'typeorm';
 import { SearchQueryDto } from './dto/search-query.dto';
 import { EntityType } from 'src/types/entityType.enum';
+import { RegistrationStatus } from 'src/types/registrationStatus.enum';
+import { HeritageResponse, HotelResponse, PlaceResponse, SearchAllResponse, SearchHeritagesResponse, SearchHotelsResponse, SearchPlacesResponse } from './dto/search-response.dto';
 
 @Injectable()
 export class SearchService {
@@ -28,9 +30,7 @@ export class SearchService {
     @InjectDataSource() private readonly datasource: DataSource,
   ) {}
 
-  async search(query: SearchQueryDto) {
-    this.logger.debug(`Starting search with query: ${JSON.stringify(query)}`);
-
+  async search(query: SearchQueryDto):Promise<SearchAllResponse> {
     try {
       switch (query.entityType) {
         case EntityType.ALL:
@@ -45,31 +45,30 @@ export class SearchService {
           throw new BadRequestException('Invalid entity type');
       }
     } catch (error) {
-      this.logger.error('An error occurred during search', error.stack);
       throw new BadRequestException(
         'Internal server error occurred while performing search',
       );
     }
   }
 
-  private async searchAllEntities(query: SearchQueryDto) {
+  private async searchAllEntities(query: SearchQueryDto): Promise<SearchAllResponse> {
     const page = query.page || 1;
     const limit = query.limit || 10;
     const offset = (page - 1) * limit;
 
     const allData = await this.datasource.query(
       `SELECT * FROM 
-      (SELECT p.name, p.description, 'PLACE' AS entity, p.thumbnailUrl
+      (SELECT p.id, p.name, p.description, 'PLACE' AS entity, p.thumbnailUrl
        FROM place p
        WHERE p.name LIKE "%${query.keyword}%" AND p.isDeleted = false
        GROUP BY p.id
        UNION 
-       SELECT h.name, h.description, 'HOTEL' AS entity,  h.thumbnailUrl
+       SELECT h.id, h.name, h.description, 'HOTEL' AS entity,  h.thumbnailUrl
        FROM hotel h
        WHERE h.name LIKE "%${query.keyword}%" AND h.isDeleted = false
        GROUP BY h.id
        UNION 
-       SELECT her.name, her.description, 'HERITAGE' AS entity, her.thumbnailUrl
+       SELECT her.id, her.name, her.description, 'HERITAGE' AS entity, her.thumbnailUrl
        FROM heritage her
        WHERE her.name LIKE "%${query.keyword}%" AND her.isDeleted = false
        GROUP BY her.id) 
@@ -98,10 +97,9 @@ export class SearchService {
     };
   }
 
-
-  private async searchPlaces(query: SearchQueryDto) {
+  private async searchPlaces(query: SearchQueryDto): Promise<SearchPlacesResponse> {
     const options = this.buildCommonOptions(query);
-  
+    
     const [places, total] = await this.placeRepository.findAndCount({
       ...options,
       where: {
@@ -109,38 +107,63 @@ export class SearchService {
         name: query.keyword ? Like(`%${query.keyword}%`) : undefined,
       },
     });
-  
-    this.logger.debug(`Search results for PLACES: ${places.length} found`);
+    
+    const placeResponses: PlaceResponse[] = places.map((place) => ({
+      id: place.id,
+      name: place.name,
+      description: place.description,
+      thumbnailUrl: place.thumbnailUrl,
+      entityType: 'PLACE', 
+    }));
+    
     return {
-      data: places,
+      data: placeResponses,
       total,
       page: query.page || 1,
       limit: query.limit || 10,
     };
   }
-
-  private async searchHeritages(query: SearchQueryDto) {
+  
+  private async searchHeritages(query: SearchQueryDto): Promise<SearchHeritagesResponse> {
     const options = this.buildHeritageOptions(query);
-  
+    
     const [heritages, total] = await this.heritageRepository.findAndCount(options);
-  
-    this.logger.debug(`Search results for HERITAGE: ${heritages.length} found`);
+    
+    const heritageResponses: HeritageResponse[] = heritages.map((heritage) => ({
+      id: heritage.id,
+      name: heritage.name,
+      description: heritage.description,
+      thumbnailUrl: heritage.thumbnailUrl,
+      entityType: 'HERITAGE',   
+      tags: heritage.tags,  
+    }));
+    
     return {
-      data: heritages,
+      data: heritageResponses,
       total,
       page: query.page || 1,
       limit: query.limit || 10,
     };
   }
-
-  private async searchHotels(query: SearchQueryDto) {
-    const options = this.buildHotelOptions(query);
-
-    const [hotels, total] = await this.hotelRepository.findAndCount(options);
   
-    this.logger.debug(`Search results for HOTELS: ${hotels.length} found`);
+
+  private async searchHotels(query: SearchQueryDto): Promise<SearchHotelsResponse> {
+    const options = this.buildHotelOptions(query);
+  
+    const [hotels, total] = await this.hotelRepository.findAndCount(options);
+    
+    const hotelResponses: HotelResponse[] = hotels.map((hotel) => ({
+      id: hotel.id,
+      name: hotel.name,
+      description: hotel.description,
+      thumbnailUrl: hotel.thumbnailUrl,
+      entityType: 'HOTEL',    
+      hotelStarRating: hotel.hotelStarRating,  
+      price: hotel.price,
+    }));
+    
     return {
-      data: hotels,
+      data: hotelResponses,
       total,
       page: query.page || 1,
       limit: query.limit || 10,
@@ -201,9 +224,10 @@ export class SearchService {
         name: query.keyword ? Like(`%${query.keyword}%`) : undefined,
         hotelStarRating: query.hotelStarRating || undefined,
         place: place,
+        registrationStatus: RegistrationStatus.ACCEPTED,
+        isDeleted: false,
         price: this.buildPriceFilter(query.minPrice, query.maxPrice),
       },
-      relations: ['place', 'owner'],
     };
   }
 
