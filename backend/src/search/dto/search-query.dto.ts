@@ -1,7 +1,9 @@
+import { PartialType } from '@nestjs/swagger';
 import { IsEnum, IsOptional, IsString, IsNumber } from 'class-validator';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { EntityType } from 'src/types/entityType.enum';
 
-export class SearchQueryDto {
+export class SearchQueryDto extends PaginationDto {
   @IsOptional()
   @IsString()
   keyword?: string;
@@ -27,14 +29,6 @@ export class SearchQueryDto {
 
   @IsOptional()
   tagIds?: number[];
-
-  @IsOptional()
-  @IsNumber()
-  page?: number;
-
-  @IsOptional()
-  @IsNumber()
-  limit?: number;
 
   @IsOptional()
   @IsString()

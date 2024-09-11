@@ -98,19 +98,6 @@ export class SearchService {
     };
   }
 
-  // private async searchPlaces(query: SearchQueryDto) {
-  //   const options = this.buildCommonOptions(query);
-  //   const places = await this.placeRepository.find({
-  //     ...options,
-  //     where: {
-  //       ...options.where,
-  //       name: query.keyword ? Like(`%${query.keyword}%`) : undefined,
-  //     },
-  //   });
-
-  //   this.logger.debug(`Search results for PLACES: ${places.length} found`);
-  //   return places;
-  // }
 
   private async searchPlaces(query: SearchQueryDto) {
     const options = this.buildCommonOptions(query);
@@ -131,15 +118,6 @@ export class SearchService {
       limit: query.limit || 10,
     };
   }
-  
-
-  // private async searchHeritages(query: SearchQueryDto) {
-  //   const options = this.buildHeritageOptions(query);
-  //   const heritages = await this.heritageRepository.find(options);
-
-  //   this.logger.debug(`Search results for HERITAGE: ${heritages.length} found`);
-  //   return heritages;
-  // }
 
   private async searchHeritages(query: SearchQueryDto) {
     const options = this.buildHeritageOptions(query);
@@ -154,19 +132,10 @@ export class SearchService {
       limit: query.limit || 10,
     };
   }
-  
-
-  // private async searchHotels(query: SearchQueryDto) {
-  //   const options = this.buildHotelOptions(query);
-  //   const hotels = await this.hotelRepository.find(options);
-
-  //   this.logger.debug(`Search results for HOTELS: ${hotels.length} found`);
-  //   return hotels;
-  // }
 
   private async searchHotels(query: SearchQueryDto) {
     const options = this.buildHotelOptions(query);
-  console.log( " this is hotel .....")
+
     const [hotels, total] = await this.hotelRepository.findAndCount(options);
   
     this.logger.debug(`Search results for HOTELS: ${hotels.length} found`);
