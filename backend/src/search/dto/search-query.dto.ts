@@ -28,7 +28,7 @@ export class SearchQueryDto extends PaginationDto {
   placeId?: string;
 
   @IsOptional()
-  tagIds?: number[];
+  tagIds?: string[];
 
   @IsOptional()
   @IsString()
