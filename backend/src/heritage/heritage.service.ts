@@ -1,17 +1,16 @@
 import {
   Injectable,
-  BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Brackets, Repository } from 'typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Heritage } from './heritage.entity';
 import { CreateHeritageDto } from './dto/create-heritage.dto';
 import { UpdateHeritageDto } from './dto/update-heritage.dto';
 import { ImageService } from '../image/image.service';
 import { EntityType } from 'src/types/entityType.enum';
-import { Image } from 'src/image/image.entity';
 import { PlaceService } from 'src/place/place.service';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Injectable()
 export class HeritageService {
@@ -20,14 +19,17 @@ export class HeritageService {
     private heritageRepository: Repository<Heritage>,
     private readonly imageService: ImageService,
     private readonly placeService: PlaceService,
+    @InjectDataSource() private readonly datasource: DataSource,
   ) {}
 
-  async create(
+  async createHeritage(
     createHeritageDto: CreateHeritageDto,
-    files: Express.Multer.File[],
+    files: { images?: Express.Multer.File[]; thumbnail: Express.Multer.File[] },
   ): Promise<Heritage> {
-    const { name, description, tagIds, placeId } = createHeritageDto;
-    const place = await this.placeService.getPlaceById(+placeId);
+    const { name, description, tags, placeId, mapUrl } = createHeritageDto;
+    const { images, thumbnail } = files;
+    
+    const place = await this.placeService.findPlaceDetailsById(placeId);
 
     if (!place) {
       throw new NotFoundException(`Place with ID ${placeId} not found`);
@@ -36,196 +38,172 @@ export class HeritageService {
     const heritage = this.heritageRepository.create({
       name,
       description,
-      tags: JSON.parse(tagIds),
-      place,
+      tags: JSON.parse(tags),
+      mapUrl,
     });
 
-    try {
-      const savedHeritage = await this.heritageRepository.save(heritage);
+    const savedHeritage = await this.heritageRepository.save(heritage);
+    savedHeritage.place = place;
 
-      if (files && files.length > 0) {
-        const uploadPromises = files.map((file) => {
-          const createImageDto = {
-            entityType: EntityType.HERITAGE,
-            entityId: savedHeritage.id.toString(),
-          };
-          return this.imageService.uploadImage(file, createImageDto);
-        });
+    heritage.thumbnailUrl = await this.imageService.handleThumbnailUpload(
+      savedHeritage.id,
+      EntityType.HERITAGE,
+      thumbnail,
+    );
 
-        await Promise.all(uploadPromises);
-      }
-
-      return savedHeritage;
-    } catch (error) {
-      throw new BadRequestException(
-        'Error creating heritage or uploading images',
-      );
-    }
+    this.imageService.handleImagesUpload(
+      savedHeritage.id,
+      EntityType.HERITAGE,
+      images,
+    );
+    return await this.heritageRepository.save(heritage);
   }
 
   async findAll(
-    page: number = 1,
-    limit: number = 10,
-  ): Promise<{ data: { heritage: Heritage; images: Image[] }[]; totalCount: number; totalPages: number }> {
-    try {
-      const [heritages, totalCount] = await this.heritageRepository.findAndCount({
-        skip: (page - 1) * limit,
-        take: limit,
-        where: { isDeleted: false },
-      });
-
-      const totalPages = Math.ceil(totalCount / limit);
-
-      const heritageWithImages = await Promise.all(
-        heritages.map(async (heritage) => {
-          const images = await this.imageService.getImagesByEntity(
-            heritage.id.toString(),
-          );
-          return { heritage, images };
-        }),
-      );
-
-      return {
-        data: heritageWithImages,
-        totalCount,
-        totalPages,
-      };
-    } catch (error) {
-      throw new BadRequestException('Error fetching all heritages');
-    }
-  }
-
-  async findByTag(
-    tagId: number,
-    page: number = 1,
-    limit: number = 10,
-  ): Promise<{ data: { heritage: Heritage; images: Image[] }[]; totalCount: number; totalPages: number }> {
-    try {
-      const [heritages, totalCount] = await this.heritageRepository
-        .createQueryBuilder('heritage')
-        .where(
-          new Brackets((qb) => {
-            qb.where('JSON_CONTAINS(heritage.tags, :tagId)', {
-              tagId: `[${tagId}]`,
-            });
-          }),
-        )
-        .andWhere('heritage.isDeleted = false')
-        .skip((page - 1) * limit)
-        .take(limit)
-        .getManyAndCount();
-
-      const totalPages = Math.ceil(totalCount / limit);
-
-      const heritageWithImages = await Promise.all(
-        heritages.map(async (heritage) => {
-          const images = await this.imageService.getImagesByEntity(
-            heritage.id.toString(),
-          );
-          return { heritage, images };
-        }),
-      );
-
-      return {
-        data: heritageWithImages,
-        totalCount,
-        totalPages,
-      };
-    } catch (error) {
-      throw new BadRequestException('Error fetching heritages by tag');
-    }
-  }
-
-  async findOne(id: number): Promise<{ heritage: Heritage; images: Image[] }> {
-    try {
-      const heritage = await this.heritageRepository.findOne({ where: { id } });
-
-      if (!heritage) {
-        throw new NotFoundException(`Heritage with ID ${id} not found`);
-      }
-
-      const images = await this.imageService.getImagesByEntity(id.toString());
-      return { heritage, images };
-    } catch (error) {
-      throw new BadRequestException(`Error fetching heritage with ID: ${id}`);
-    }
-  }
-
-  async findByPlaceId(
-    placeId: number,
-    page: number = 1,
-    limit: number = 10,
+    paginationDto: PaginationDto,
   ): Promise<{ data: Heritage[]; totalCount: number; totalPages: number }> {
-    try {
-      const place = await this.placeService.getPlaceById(placeId);
-      const [heritages, totalCount] = await this.heritageRepository.findAndCount({
-        where: { place, isDeleted: false },
-        skip: (page - 1) * limit,
-        take: limit,
-      });
+    const { page, limit } = paginationDto;
+    const pageNumber = Math.max(1, page);
+    const pageSize = Math.max(1, limit);
+    const offset = (pageNumber - 1) * pageSize;
 
-      const totalPages = Math.ceil(totalCount / limit);
+    const heritagesResult = await this.datasource.query(
+      `SELECT h.*,
+          JSON_OBJECT(
+            'id', p.id,
+            'name', p.name,
+            'description', p.description,
+            'thumbnailUrl', p.thumbnailUrl
+          ) AS place,
+          COALESCE(
+            JSON_ARRAYAGG(
+              JSON_OBJECT('id', img.id, 'imageLink', img.imageLink)
+            ), '[]'
+          ) AS images
+        FROM heritage h
+        INNER JOIN place p ON h.placeId = p.id
+        LEFT JOIN image img ON img.entityId = h.id
+        AND img.entityType = 'HERITAGE'
+        AND img.isDeleted = false
+        WHERE h.isDeleted = false
+        GROUP BY h.id, p.id
+        LIMIT ? OFFSET ?`,
+      [pageSize, offset],
+    );
 
-      return {
-        data: heritages,
-        totalCount,
-        totalPages,
-      };
-    } catch (error) {
-      throw new BadRequestException('Error fetching heritages by place ID');
+    if (!heritagesResult || heritagesResult.length === 0) {
+      throw new NotFoundException(`No heritages found`);
     }
+
+    const [totalCountResult] = await this.datasource.query(
+      `SELECT COUNT(*) AS totalCount FROM heritage WHERE isDeleted = false`,
+    );
+
+    const totalCount = parseInt(totalCountResult.totalCount, 10);
+    const totalPages = Math.ceil(totalCount / pageSize);
+
+    const heritages = heritagesResult.map((heritage: any) => ({
+      id: heritage.id,
+      name: heritage.name,
+      description: heritage.description,
+      thumbnailUrl: heritage.thumbnailUrl,
+      mapUrl: heritage.mapUrl,
+      isDeleted: heritage.isDeleted,
+      place: heritage.place,
+      images: heritage.images ? JSON.parse(heritage.images) : [],
+    }));
+
+    return {
+      data: heritages,
+      totalCount,
+      totalPages,
+    };
   }
-  
+
+  async findOne(id: string): Promise<{ heritage: Heritage }> {
+    const heritageResult = await this.datasource.query(
+      `SELECT h.id,
+      h.name,
+      h.description,
+      h.thumbnailUrl,
+      h.mapUrl,
+      h.isDeleted,
+        JSON_OBJECT(
+          'id', p.id,
+          'name', p.name,
+          'description', p.description
+          'thumbnailUrl', p.thumbnailUrl,
+        ) AS place,
+        COALESCE(
+          JSON_ARRAYAGG(
+            JSON_OBJECT('id', img.id, 'imageLink', img.imageLink)
+          ), '[]'
+        ) AS images
+      FROM heritage h
+      INNER JOIN place p ON h.placeId = p.id
+      LEFT JOIN image img ON img.entityId = h.id
+      AND img.entityType = 'HERITAGE'
+      AND img.isDeleted = false
+      WHERE h.id = ? AND h.isDeleted = false
+      GROUP BY h.id, p.id`,
+      [id],
+    );
+
+    if (!heritageResult || heritageResult.length === 0) {
+      throw new NotFoundException(`Heritage with id ${id} not found`);
+    }
+
+    const heritage = heritageResult[0];
+
+    heritage.images = heritage.images ? JSON.parse(heritage.images) : [];
+
+    return { heritage };
+  }
+
   async update(
-    id: number,
+    id: string,
     updateHeritageDto: UpdateHeritageDto,
-    files: Express.Multer.File[],
+    thumbnail?: Express.Multer.File[],
   ): Promise<Heritage> {
-    try {
-      const heritage = await this.heritageRepository.findOne({ where: { id } });
+    const heritage = await this.heritageRepository.findOne({
+      where: { id, isDeleted: false },
+    });
 
-      if (!heritage) {
-        throw new NotFoundException('Heritage not found');
-      }
+    if (!heritage) {
+      throw new NotFoundException('Heritage not found');
+    }
 
-      Object.assign(heritage, updateHeritageDto);
+    if (thumbnail) {
+      await this.imageService.deleteImageByUrl(heritage.thumbnailUrl);
 
-      const updatedHeritage = await this.heritageRepository.save(heritage);
-
-      if (files && files.length > 0) {
-        const uploadPromises = files.map((file) => {
-          const createImageDto = {
-            entityType: EntityType.HERITAGE,
-            entityId: updatedHeritage.id.toString(),
-          };
-          return this.imageService.uploadImage(file, createImageDto);
-        });
-
-        await Promise.all(uploadPromises);
-      }
-
-      return updatedHeritage;
-    } catch (error) {
-      throw new BadRequestException(
-        'Error updating heritage or uploading images',
+      heritage.thumbnailUrl = await this.imageService.handleThumbnailUpload(
+        heritage.id,
+        EntityType.PLACE,
+        thumbnail,
       );
     }
+
+    if (updateHeritageDto.tags) {
+      heritage.tags = JSON.parse(updateHeritageDto.tags);
+    }
+
+    Object.assign(heritage, updateHeritageDto);
+
+    const updatedHeritage = await this.heritageRepository.save(heritage);
+
+    return updatedHeritage;
   }
 
-  async remove(id: number): Promise<void> {
-    try {
-      const heritage = await this.heritageRepository.findOne({ where: { id } });
+  async remove(id: string): Promise<void> {
+    const heritage = await this.heritageRepository.findOne({
+      where: { id, isDeleted: false },
+    });
 
-      if (!heritage) {
-        throw new NotFoundException(`Heritage with ID ${id} not found`);
-      }
-
-      await this.imageService.deleteImagesByEntity(id.toString());
-      await this.heritageRepository.update(id, { isDeleted: true });
-    } catch (error) {
-      throw new BadRequestException(
-        'Error deleting heritage or associated images',
-      );
+    if (!heritage) {
+      throw new NotFoundException(`Heritage with ID ${id} not found`);
     }
+
+    await this.imageService.deleteImagesByEntity(id, EntityType.HERITAGE);
+    await this.heritageRepository.update(id, { isDeleted: true });
   }
 }

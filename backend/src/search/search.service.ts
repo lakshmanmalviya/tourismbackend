@@ -1,9 +1,5 @@
-
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
-import {
-  InjectDataSource,
-  InjectRepository,
-} from '@nestjs/typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { Heritage } from 'src/heritage/heritage.entity';
 import { Hotel } from 'src/hotel/hotel.entity';
 import { Place } from 'src/place/place.entity';
@@ -59,54 +55,98 @@ export class SearchService {
   private async searchAllEntities(query: SearchQueryDto) {
     const page = query.page || 1;
     const limit = query.limit || 10;
-
     const offset = (page - 1) * limit;
 
     const allData = await this.datasource.query(
       `SELECT * FROM 
-      (SELECT name, description, 'PLACE' as entity FROM place 
-      UNION 
-      SELECT name, description, 'HERITAGE' as entity FROM heritage 
-      UNION 
-      SELECT name, description, 'HOTEL' as entity FROM hotel) 
+      (SELECT p.name, p.description, 'PLACE' AS entity, p.thumbnailUrl
+       FROM place p
+       WHERE p.name LIKE "%${query.keyword}%" AND p.isDeleted = false
+       GROUP BY p.id
+       UNION 
+       SELECT h.name, h.description, 'HOTEL' AS entity,  h.thumbnailUrl
+       FROM hotel h
+       WHERE h.name LIKE "%${query.keyword}%" AND h.isDeleted = false
+       GROUP BY h.id
+       UNION 
+       SELECT her.name, her.description, 'HERITAGE' AS entity, her.thumbnailUrl
+       FROM heritage her
+       WHERE her.name LIKE "%${query.keyword}%" AND her.isDeleted = false
+       GROUP BY her.id) 
       AS A 
-      WHERE A.name LIKE "%${query.keyword}%"
-      LIMIT ${limit} OFFSET ${offset}`,
+      LIMIT ? OFFSET ?`,
+      [limit, offset],
     );
 
-    this.logger.debug('data from query : is ', allData);
-    return { allData };
+    const [totalCountResult] = await this.datasource.query(
+      `SELECT COUNT(*) AS totalCount FROM 
+      (SELECT id FROM place WHERE isDeleted = false AND name LIKE "%${query.keyword}%"
+       UNION
+       SELECT id FROM heritage WHERE isDeleted = false AND name LIKE "%${query.keyword}%"
+       UNION
+       SELECT id FROM hotel WHERE isDeleted = false AND name LIKE "%${query.keyword}%") 
+      AS TotalEntities`,
+    );
+
+    const total = parseInt(totalCountResult.totalCount, 10);
+
+    return {
+      data: allData,
+      total,
+      page,
+      limit,
+    };
   }
+
 
   private async searchPlaces(query: SearchQueryDto) {
     const options = this.buildCommonOptions(query);
-    const places = await this.placeRepository.find({
+  
+    const [places, total] = await this.placeRepository.findAndCount({
       ...options,
       where: {
         ...options.where,
         name: query.keyword ? Like(`%${query.keyword}%`) : undefined,
       },
     });
-
+  
     this.logger.debug(`Search results for PLACES: ${places.length} found`);
-    return places;
+    return {
+      data: places,
+      total,
+      page: query.page || 1,
+      limit: query.limit || 10,
+    };
   }
 
   private async searchHeritages(query: SearchQueryDto) {
     const options = this.buildHeritageOptions(query);
-    const heritages = await this.heritageRepository.find(options);
-
+  
+    const [heritages, total] = await this.heritageRepository.findAndCount(options);
+  
     this.logger.debug(`Search results for HERITAGE: ${heritages.length} found`);
-    return heritages;
+    return {
+      data: heritages,
+      total,
+      page: query.page || 1,
+      limit: query.limit || 10,
+    };
   }
 
   private async searchHotels(query: SearchQueryDto) {
     const options = this.buildHotelOptions(query);
-    const hotels = await this.hotelRepository.find(options);
 
+    const [hotels, total] = await this.hotelRepository.findAndCount(options);
+  
     this.logger.debug(`Search results for HOTELS: ${hotels.length} found`);
-    return hotels;
+    return {
+      data: hotels,
+      total,
+      page: query.page || 1,
+      limit: query.limit || 10,
+    };
   }
+  
 
   private buildCommonOptions(
     query: SearchQueryDto,
@@ -163,7 +203,7 @@ export class SearchService {
         place: place,
         price: this.buildPriceFilter(query.minPrice, query.maxPrice),
       },
-      relations: ['place', 'user'],
+      relations: ['place', 'owner'],
     };
   }
 

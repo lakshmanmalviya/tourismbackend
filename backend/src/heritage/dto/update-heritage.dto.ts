@@ -1,15 +1,4 @@
-import { IsString, IsOptional, IsArray } from 'class-validator';
+import { PartialType } from '@nestjs/swagger';
+import { CreateHeritageDto } from './create-heritage.dto';
 
-export class UpdateHeritageDto {
-  @IsString()
-  @IsOptional()
-  name?: string;
-
-  @IsString()
-  @IsOptional()
-  description?: string;
-
-  @IsArray()
-  @IsOptional()
-  tags?: string[];
-}
+export class UpdateHeritageDto extends PartialType(CreateHeritageDto) {}

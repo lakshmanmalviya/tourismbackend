@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from 'src/auth/auth.module';
 import { Place } from './place.entity';
@@ -7,7 +7,8 @@ import { PlaceController } from './place.controller';
 import { ImageModule } from 'src/image/image.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Place]), AuthModule, ImageModule],
+  imports: [TypeOrmModule.forFeature([Place]), AuthModule, ImageModule,
+],
   providers: [PlaceService],
   controllers: [PlaceController],
   exports: [PlaceService]

@@ -9,6 +9,7 @@ import {
   Delete,
   Param,
   NotFoundException,
+  Get,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ImageService } from './image.service';
@@ -44,10 +45,10 @@ export class ImageController {
   }
 
   @UseGuards(AuthGuard)
-  @Delete(':publicID')
-  async deleteImage(@Param('publicID') publicID: string) {
+  @Delete(':imageUrl')
+  async deleteImage(@Param('imageUrl') imageUrl: string) {
     try {
-      await this.imageService.deleteImage(publicID);
+      await this.imageService.deleteImageByUrl(imageUrl);
 
       return {
         statusCode: 200,

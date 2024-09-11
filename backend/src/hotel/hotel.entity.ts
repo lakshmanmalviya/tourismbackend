@@ -1,12 +1,17 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, RelationId } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+} from 'typeorm';
 import { Place } from '../place/place.entity';
 import { User } from '../user/user.entity';
 import { RegistrationStatus } from 'src/types/registrationStatus.enum';
 
 @Entity()
 export class Hotel {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
   name: string;
@@ -17,14 +22,20 @@ export class Hotel {
   @Column({ nullable: true })
   websiteLink?: string;
 
+  @Column({nullable: true}) 
+  thumbnailUrl: string;
+  
+  @Column({ length: 1000}) 
+  mapUrl: string;
+
   @Column({ nullable: true })
   contact?: string;
 
   @Column()
-  hotelStarRating: number;
+  address: string;
 
   @Column()
-  address: string;
+  hotelStarRating: number;
 
   @Column()
   availableRooms: number;
@@ -39,22 +50,15 @@ export class Hotel {
   })
   registrationStatus: RegistrationStatus;
 
+  @ManyToOne(() => Place, (place) => place.id)
+  place: Place;
+
+  @ManyToOne(() => User, (user) => user.id)
+  owner: User;
+
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   updatedAt: Date;
 
   @Column({ default: false })
   isDeleted: boolean;
-
-  @ManyToOne(() => Place, (place) => place.id)
-  place: Place;
-
-  @RelationId((hotel: Hotel) => hotel.place)
-  placeId: number;
-
-  @ManyToOne(() => User, (user) => user.id)
-  user: User;
-
-  
-  @RelationId((hotel: Hotel) => hotel.user)
-  userId: number;
 }

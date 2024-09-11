@@ -40,7 +40,7 @@ async function bootstrap() {
 
   app.useGlobalFilters(new AllExceptionsFilter());
 
-  app.useGlobalInterceptors(new CustomResponseInterceptor());
+  // app.useGlobalInterceptors(new CustomResponseInterceptor());
 
   app.use('/uploads', express.static('uploads'));
 
