@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { loginStart } from '../Redux/slices/authSlice';
-import styles from '../styles/Login.module.css';
+import { loginStart } from '../../Redux/slices/authSlice';
+import styles from '../../styles/Login.module.css';
 import { toast } from 'react-toastify';  
 import 'react-toastify/dist/ReactToastify.css'; 
-import { useAppDispatch, useAppSelector } from '../hooks/hook'; 
+import { useAppDispatch, useAppSelector } from '../../hooks/hook'; 
 import { useRouter } from 'next/router'; 
 
 const Login = ({ toggleForm, onSuccess }: { toggleForm: () => void, onSuccess: () => void }) => {

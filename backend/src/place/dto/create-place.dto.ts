@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreatePlaceDto {
   @IsNotEmpty()
@@ -8,4 +8,8 @@ export class CreatePlaceDto {
   @IsNotEmpty()
   @IsString() 
   description: string;
+
+  @IsOptional()
+  @IsString()
+  mapUrl:string;
 }

@@ -23,6 +23,7 @@ export class TagController {
   @Post()
   async create(@Body() createTagDto: CreateTagDto) {
     try {
+      console.log("here .....", createTagDto)
       const tag = await this.tagService.create(createTagDto);
       return {
         statusCode: 201,
@@ -51,7 +52,7 @@ export class TagController {
   @Get(':id')
   async findByIds(@Param('id') id: string) {
     try {
-      const tag = await this.tagService.findById(+id);
+      const tag = await this.tagService.findById(id);
 
       return {
         statusCode: 200,

@@ -13,6 +13,9 @@ import { AuthModule } from './auth/auth.module';
 import { MulterModule } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
+import { SearchController } from './search/search.controller';
+import { SearchModule } from './search/search.module';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -43,8 +46,10 @@ import { extname } from 'path';
     ImageModule,
     QueryModule,
     AuthModule,
+    SearchModule,
   ],
   providers: [AppService],
+  controllers: [AppController],
 })
 export class AppModule {
   constructor(private dataSource: DataSource) {}

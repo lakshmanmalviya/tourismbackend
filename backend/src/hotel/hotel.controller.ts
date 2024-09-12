@@ -12,7 +12,7 @@ import {
   Get,
   Query,
 } from '@nestjs/common';
-import { FilesInterceptor } from '@nestjs/platform-express';
+import { FileFieldsInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { HotelService } from './hotel.service';
 import { CreateHotelDto } from './dto/create-hotel.dto';
 import { AuthGuard } from '../auth/auth.guard';
@@ -22,6 +22,8 @@ import { plainToInstance } from 'class-transformer';
 import { validateOrReject } from 'class-validator';
 import { UpdateHotelDto } from './dto/update-hotel.dto';
 import { RegistrationStatus } from 'src/types/registrationStatus.enum';
+import { GetHotelDto } from './dto/get-hotel.dto';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Controller('hotels')
 export class HotelController {
@@ -29,19 +31,17 @@ export class HotelController {
 
   @Get()
   async findAll(
-    @Query('ownerId') ownerId: number,
-    @Query('page') page: number = 1,
-    @Query('limit') limit: number = 10,
+    @Query() query: GetHotelDto,
   ) {
     try {
-      const hotels = await this.hotelService.findAll(ownerId,{ page, limit});
+      const hotels = await this.hotelService.findAll(query);
       return {
         statusCode: 200,
         message: 'Hotels fetched successfully',
         data: hotels.data,
-        total: hotels.total,
-        page,
-        limit,
+        totalCount: hotels.totalCount,
+        totalPages: hotels.totalPages,
+        limit: query.limit,
       };
     } catch (error) {
       throw new BadRequestException('Error fetching hotels', error.message);
@@ -50,18 +50,18 @@ export class HotelController {
 
   @Get('pending')
   async findPending(
-    @Query('page') page: number = 1,
-    @Query('limit') limit: number = 10,
+    @Query() query: PaginationDto
   ) {
     try {
-      const hotels = await this.hotelService.findPending({page, limit});
+      console.log( " pending query ...." , query )
+      const hotels = await this.hotelService.findPending(query);
       return {
         statusCode: 200,
         message: 'Pending hotels fetched successfully',
         data: hotels.data,
         total: hotels.total,
-        page,
-        limit,
+        page: hotels.page,
+        limit: hotels.limit,
       };
     } catch (error) {
       throw new BadRequestException('Error fetching pending hotels');
@@ -69,7 +69,7 @@ export class HotelController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: number) {
+  async findOne(@Param('id') id: string) {
     try {
       const hotel = await this.hotelService.findOne(id);
       return {
@@ -85,16 +85,21 @@ export class HotelController {
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(['ADMIN', 'PROVIDER'])
   @Post()
-  @UseInterceptors(FilesInterceptor('files'))
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'images' },
+      { name: 'thumbnail', maxCount: 1 },
+    ]),
+  )
   async create(
     @Body() createHotelDto: Record<string, any>,
-    @UploadedFiles() files: Express.Multer.File[],
+    @UploadedFiles()
+    files: { images?: Express.Multer.File[]; thumbnail: Express.Multer.File[] },
   ) {
-    try {
-      if (!files || files.length === 0) {
-        throw new BadRequestException('At least one file is required');
+      if (!files.thumbnail) {
+        throw new BadRequestException('thumbnail is required');
       }
-
+      
       const transformedDto = plainToInstance(CreateHotelDto, createHotelDto);
       await validateOrReject(transformedDto);
 
@@ -104,19 +109,17 @@ export class HotelController {
         message: 'Hotel created successfully with images',
         data: hotel,
       };
-    } catch (error) {
-      throw new BadRequestException('Error creating hotel');
-    }
+   
   }
 
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(['ADMIN', 'PROVIDER'])
   @Patch(':id')
-  @UseInterceptors(FilesInterceptor('files'))
+  @UseInterceptors(FilesInterceptor('thumbnail'))
   async update(
-    @Param('id') id: number,
+    @Param('id') id: string,
     @Body() updateHotelDto: Record<string, any>,
-    @UploadedFiles() files: Express.Multer.File[],
+    @UploadedFiles() thumbnail: Express.Multer.File[],
   ) {
     try {
       const transformedDto = plainToInstance(UpdateHotelDto, updateHotelDto);
@@ -125,7 +128,7 @@ export class HotelController {
       const updatedHotel = await this.hotelService.update(
         id,
         transformedDto,
-        files,
+        thumbnail,
       );
       return {
         statusCode: 200,
@@ -141,7 +144,7 @@ export class HotelController {
   @Roles(['ADMIN'])
   @Patch('status/:hotelId')
   async updateStatus(
-    @Param('hotelId') hotelId: number,
+    @Param('hotelId') hotelId: string,
     @Body('status') status: RegistrationStatus,
   ) {
     try {
@@ -162,7 +165,7 @@ export class HotelController {
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(['ADMIN', 'PROVIDER'])
   @Delete(':id')
-  async softDelete(@Param('id') id: number) {
+  async softDelete(@Param('id') id: string) {
     try {
       await this.hotelService.softDelete(id);
       return {

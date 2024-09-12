@@ -32,12 +32,15 @@ async function bootstrap() {
       transform: true,
       whitelist: true,
       forbidNonWhitelisted: true,
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
     }),
   );
 
   app.useGlobalFilters(new AllExceptionsFilter());
 
-  app.useGlobalInterceptors(new CustomResponseInterceptor());
+  // app.useGlobalInterceptors(new CustomResponseInterceptor());
 
   app.use('/uploads', express.static('uploads'));
 

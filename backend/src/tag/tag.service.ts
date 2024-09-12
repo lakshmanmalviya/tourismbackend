@@ -13,6 +13,7 @@ export class TagService {
 
   async create(createTagDto: CreateTagDto): Promise<Tag> {
     const tag = this.tagRepository.create(createTagDto);
+    console.log("tag : " , tag)
     return this.tagRepository.save(tag);
   }
 
@@ -20,7 +21,7 @@ export class TagService {
     return this.tagRepository.find();
   }
 
-  async findById(id: number): Promise<Tag> {
+  async findById(id: string) {
     return this.tagRepository.findOne({where: {id}});
   }
 

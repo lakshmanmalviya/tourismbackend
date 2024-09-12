@@ -1,11 +1,13 @@
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsNumber, IsOptional, Min } from 'class-validator';
 
 export class PaginationDto {
-  @IsNumber()
   @IsOptional()
-  page: number = 1;
+  @IsNumber()
+  @Min(1)
+  page?: number = 1;
 
-  @IsNumber()
   @IsOptional()
-  limit: number = 5;
+  @IsNumber()
+  @Min(1)
+  limit?: number = 5;
 }
