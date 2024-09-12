@@ -1,15 +1,25 @@
+import { EntityType } from '@/types/search/searchPayload';
 import React, { useState } from 'react';
 import { CiSearch } from 'react-icons/ci';
 
-const SearchBar = () => {
+interface SearchBarProps {
+  entityType: EntityType; 
+  onSearch: (searchTerm: string, entityType: EntityType) => void;
+}
+
+const SearchBar: React.FC<SearchBarProps> = ({ entityType, onSearch }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
-  const handleInputChange = (event: { target: { value: React.SetStateAction<string>; }; }) => {
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
   };
 
   const handleSearch = () => {
-    
+
+    console.log(" the search button is pressed", searchTerm)
+    if (searchTerm.trim()) {
+      onSearch(searchTerm, entityType);
+    }
   };
 
   return (

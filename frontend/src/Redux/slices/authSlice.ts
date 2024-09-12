@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { registerPayload } from '@/types/registerPayload';
-import { AuthState } from '@/types/authStatePayload';
-import { loginPayload } from '@/types/loginPayload';
+import { registerPayload } from '@/types/auth/registerPayload';
+import { AuthState } from '@/types/auth/authStatePayload';
+import { loginPayload } from '@/types/auth/loginPayload';
 
 export const initialState: AuthState = {
   isAuthenticated: false,

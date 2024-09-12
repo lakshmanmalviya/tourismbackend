@@ -11,6 +11,7 @@ import { UpdatePlaceDto } from './dto/update-place.dto';
 import { ImageService } from '../image/image.service';
 import { EntityType } from 'src/types/entityType.enum';
 import { PaginationDto } from '../common/dto/pagination.dto';
+import { GetPlaceDto } from './dto/get-place.dto';
 
 @Injectable()
 export class PlaceService {
@@ -57,16 +58,25 @@ export class PlaceService {
     return place;
   }
 
-  async findAll(paginationDto: PaginationDto): Promise<{
-    data: Place[];
-    totalCount: number;
-    totalPages: number;
+  async findAll(query: GetPlaceDto): Promise<{
+    data: { id: number; name: string }[] | Place[];
+    totalCount?: number;
+    totalPages?: number;
   }> {
-    const { page, limit } = paginationDto;
+    const { page, limit, name } = query;
     const pageNumber = Math.max(1, page);
     const pageSize = Math.max(1, limit);
     const offset = (pageNumber - 1) * pageSize;
-
+  
+    if (name) {
+      const placesName = await this.datasource.query(
+        `SELECT p.id as id , p.name as name
+         FROM place p
+         WHERE p.isDeleted = false`
+      );
+      return placesName;
+    }
+  
     const places = await this.datasource.query(
       `SELECT p.*, 
               GROUP_CONCAT(
@@ -82,21 +92,21 @@ export class PlaceService {
        GROUP BY p.id
        ORDER BY p.id
        LIMIT ? OFFSET ?`,
-      [pageSize, offset],
+      [pageSize, offset]
     );
-
+  
     const [totalCountResult] = await this.datasource.query(
       `SELECT COUNT(DISTINCT p.id) as totalCount
        FROM place p
        LEFT JOIN image img 
        ON p.id = img.entityId 
        AND img.entityType = 'PLACE' 
-       AND img.isDeleted = false`,
+       AND img.isDeleted = false`
     );
-
+  
     const totalCount = parseInt(totalCountResult.totalCount, 10);
     const totalPages = Math.ceil(totalCount / pageSize);
-
+  
     return {
       data: places.map((place) => ({
         ...place,
@@ -106,7 +116,7 @@ export class PlaceService {
       totalPages,
     };
   }
-
+  
   async createPlace(
     createPlaceDto: CreatePlaceDto,
     files: { images?: Express.Multer.File[]; thumbnail: Express.Multer.File[] },

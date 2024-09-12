@@ -12,24 +12,30 @@ import {
   Get,
   Query,
 } from '@nestjs/common';
-import {
-  FileFieldsInterceptor,
-} from '@nestjs/platform-express';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { PlaceService } from './place.service';
 import { CreatePlaceDto } from './dto/create-place.dto';
 import { UpdatePlaceDto } from './dto/update-place.dto';
 import { AuthGuard } from '../auth/auth.guard';
 import { RolesGuard } from '../role/role.guard';
 import { Roles } from '../role/roles.decorator';
-import { PaginationDto } from '../common/dto/pagination.dto';
+import { GetPlaceDto } from './dto/get-place.dto';
 
 @Controller('places')
 export class PlaceController {
   constructor(private readonly placeService: PlaceService) {}
 
   @Get()
-  async getAllPlaces(@Query() paginationDto: PaginationDto) {
-    const placesWithImages = await this.placeService.findAll(paginationDto);
+  async getAllPlaces(@Query() query: GetPlaceDto) {
+    const placesWithImages = await this.placeService.findAll(query);
+
+    if (query.name) {
+      return {
+        statusCode: 200,
+        message: 'All places fetched successfully',
+        data: placesWithImages,
+      };
+    }
     return {
       statusCode: 200,
       message: 'All places fetched successfully',
@@ -37,8 +43,8 @@ export class PlaceController {
       meta: {
         totalPages: placesWithImages.totalPages,
         totalCount: placesWithImages.totalCount,
-        currentPage: paginationDto.page,
-        limit: paginationDto.limit,
+        currentPage: query.page,
+        limit: query.limit,
       },
     };
   }

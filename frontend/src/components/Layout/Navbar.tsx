@@ -136,11 +136,11 @@ const Navbar = () => {
               />
             </svg>
           </button>
-          <Link href="/" onClick={toggleMenu} className="hover:text-green-500 transition">Home</Link>
-          <Link href="/discover" onClick={toggleMenu} className="hover:text-green-500 transition">Discover</Link>
-          <Link href="/Heritage" onClick={toggleMenu} className="hover:text-green-500 transition">Heritage</Link>
-          <Link href="/Gallery" onClick={toggleMenu} className="hover:text-green-500 transition">Gallery</Link>
-          <Link href="/Hotel" onClick={toggleMenu} className="hover:text-green-500 transition">Hotels</Link>
+          <Link href="/"  className="hover:text-green-500 transition">Home</Link>
+          <Link href="/Discover"  className="hover:text-green-500 transition">Discover</Link>
+          <Link href="/Heritage"  className="hover:text-green-500 transition">Heritage</Link>
+          <Link href="/Gallery"  className="hover:text-green-500 transition">Gallery</Link>
+          <Link href="/Hotel"  className="hover:text-green-500 transition">Hotels</Link>
           <Button onClick={handleOpen} className="bg-green-500 text-white px-6 py-2 rounded-full hover:bg-green-600 transition">Register / Login</Button>
         </div>
       )}

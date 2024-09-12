@@ -11,13 +11,10 @@ import {
   refreshTokenSuccess,
   logout as logoutAction,
 } from '../slices/authSlice';
-import { registerPayload } from '@/types/registerPayload';
-import { loginPayload } from '@/types/loginPayload';
+import { registerPayload } from '@/types/auth/registerPayload';
+import { loginPayload } from '@/types/auth/loginPayload';
+import { api } from '@/utils/utils';
 
-const api = axios.create({
-  baseURL: 'http://localhost:5001',
-  withCredentials: true,
-});
 
 function* handleLogin(action: PayloadAction<loginPayload>): Generator {
   try {

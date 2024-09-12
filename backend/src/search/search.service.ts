@@ -176,7 +176,6 @@ export class SearchService {
   ): FindManyOptions<Place | Hotel | Heritage> {
     const { page = 1, limit = 10, sortBy, sortOrder = 'ASC' } = query;
     const skip = (page - 1) * limit;
-    console.log('Skip is here: ', skip, page, limit);
     return {
       skip,
       take: limit,
