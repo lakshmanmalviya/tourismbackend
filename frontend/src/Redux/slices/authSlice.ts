@@ -2,7 +2,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { registerPayload } from '@/types/auth/registerPayload';
 import { AuthState } from '@/types/auth/authStatePayload';
 import { loginPayload } from '@/types/auth/loginPayload';
-
+import Cookies from 'js-cookie';  
 export const initialState: AuthState = {
   isAuthenticated: false,
   loading: false,
@@ -45,6 +45,14 @@ const authSlice = createSlice({
     refreshTokenSuccess(state) {
       state.isAuthenticated = true;
     },
+    checkToken(state) {
+      const token = Cookies.get('refreshToken'); 
+      if (token) {
+        state.isAuthenticated = true;
+      } else {
+        state.isAuthenticated = false;
+      }
+    },
   },
 });
 
@@ -56,6 +64,7 @@ export const {
   registerSuccess,
   registerFailure,
   logout,
+  checkToken,
   refreshTokenSuccess,
 } = authSlice.actions;
 

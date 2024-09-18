@@ -1,29 +1,31 @@
-export enum EntityType {
-  ALL = 'ALL',
-  HERITAGE = 'HERITAGE',
-  HOTEL = 'HOTEL',
+import { EntityType } from "../enum/entityType.enum";
+
+export enum SearchEntityType {
+  ALL = "ALL",
+  HERITAGE = "HERITAGE",
+  HOTEL = "HOTEL",
 }
 
 export interface SearchQueryDto {
   keyword?: string;
-  entityType: EntityType;
-  placeId?: number;
+  entityType: SearchEntityType;
+  placeId?: string;
   hotelStarRating?: number;
   minPrice?: number;
   maxPrice?: number;
-  tagIds?: number[];
+  tagIds?: string[];
   page?: number;
   limit?: number;
   sortBy?: string;
-  sortOrder?: 'ASC' | 'DESC';
+  sortOrder?: "ASC" | "DESC";
 }
 
 export interface SearchResponseItem {
-  id: number;
+  id: string;
   name: string;
   description: string;
   thumbnailUrl: string;
-  entityType: 'PLACE' | 'HERITAGE' | 'HOTEL';
+  entity: EntityType;
 }
 
 export interface PlaceResponse extends SearchResponseItem {}
@@ -66,6 +68,6 @@ export interface SearchHotelsResponse {
 }
 
 export interface SearchSuccessPayload {
-  entityType: EntityType;
+  entityType: SearchEntityType;
   results: SearchAllResponse;
 }

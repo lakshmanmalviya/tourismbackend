@@ -3,7 +3,6 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { registerStart } from '../../Redux/slices/authSlice';
 import { pawdRegExp } from '@/utils/utils';
-import styles from '../../styles/Register.module.css';
 import { toast } from 'react-toastify';  
 import 'react-toastify/dist/ReactToastify.css'; 
 import { useAppDispatch, useAppSelector } from '../../hooks/hook'; 
@@ -66,78 +65,78 @@ const Register = ({ toggleForm, onSuccess }: { toggleForm: () => void, onSuccess
   }, [formik.values.password]);
 
   return (
-    <div className={styles.formContainer}>
-      <h2 className={styles.heading}>Register</h2>
+    <div className="max-w-md mx-auto p-6 border border-gray-300 rounded-lg shadow-lg bg-gray-50">
+      <h2 className="text-2xl font-semibold text-center mb-6">Register</h2>
       <form onSubmit={formik.handleSubmit}>
-        <div className={styles.formGroup}>
-          <label htmlFor="username" className={styles.label}>
+        <div className="mb-5">
+          <label htmlFor="username" className="block font-bold mb-2">
             Username
           </label>
           <input
             id="username"
             type="text"
-            className={styles.input}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md text-lg"
             {...formik.getFieldProps('username')}
           />
           {formik.touched.username && formik.errors.username ? (
-            <div className={styles.error}>{formik.errors.username}</div>
+            <div className="text-red-500 mt-1 text-sm">{formik.errors.username}</div>
           ) : null}
         </div>
 
-        <div className={styles.formGroup}>
-          <label htmlFor="email" className={styles.label}>
+        <div className="mb-5">
+          <label htmlFor="email" className="block font-bold mb-2">
             Email
           </label>
           <input
             id="email"
             type="email"
-            className={styles.input}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md text-lg"
             {...formik.getFieldProps('email')}
           />
           {formik.touched.email && formik.errors.email ? (
-            <div className={styles.error}>{formik.errors.email}</div>
+            <div className="text-red-500 mt-1 text-sm">{formik.errors.email}</div>
           ) : null}
         </div>
 
-        <div className={styles.formGroup}>
-          <label htmlFor="password" className={styles.label}>
+        <div className="mb-5">
+          <label htmlFor="password" className="block font-bold mb-2">
             Password
           </label>
           <input
             id="password"
             type="password"
-            className={styles.input}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md text-lg"
             {...formik.getFieldProps('password')}
           />
           {formik.touched.password && formik.errors.password ? (
-            <div className={styles.error}>{formik.errors.password}</div>
+            <div className="text-red-500 mt-1 text-sm">{formik.errors.password}</div>
           ) : null}
 
-          <div className={styles.passwordRules}>
+          <div className="mt-2 text-sm">
             <div
-              className={`${styles.rule} ${
-                passwordRules.minLength ? styles.valid : ''
-              }`}
+              className={`${
+                passwordRules.minLength ? 'text-green-500' : 'text-red-500'
+              } mb-1`}
             >
               • At least 8 characters
             </div>
             <div
-              className={`${styles.rule} ${
-                passwordRules.hasLetter ? styles.valid : ''
-              }`}
+              className={`${
+                passwordRules.hasLetter ? 'text-green-500' : 'text-red-500'
+              } mb-1`}
             >
               • At least one letter (A-Z or a-z)
             </div>
             <div
-              className={`${styles.rule} ${
-                passwordRules.hasNumber ? styles.valid : ''
-              }`}
+              className={`${
+                passwordRules.hasNumber ? 'text-green-500' : 'text-red-500'
+              } mb-1`}
             >
               • At least one number (0-9)
             </div>
             <div
-              className={`${styles.rule} ${
-                passwordRules.hasSpecialChar ? styles.valid : ''
+              className={`${
+                passwordRules.hasSpecialChar ? 'text-green-500' : 'text-red-500'
               }`}
             >
               • At least one special character (@$!%*#?&)
@@ -145,12 +144,15 @@ const Register = ({ toggleForm, onSuccess }: { toggleForm: () => void, onSuccess
           </div>
         </div>
 
-        <button type="submit" className={styles.button}>
+        <button type="submit" className="w-full px-4 py-2 bg-green-500 text-white font-bold rounded-md hover:bg-green-600">
           Register
         </button>
       </form>
 
-      <a className={styles.link} onClick={toggleForm}>
+      <a
+        className="block text-center mt-6 text-green-500 text-lg cursor-pointer hover:underline"
+        onClick={toggleForm}
+      >
         Already have an account? Login
       </a>
     </div>

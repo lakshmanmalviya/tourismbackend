@@ -1,53 +1,66 @@
-import { call, put, takeEvery, delay } from 'redux-saga/effects';
-import axios from 'axios';
-import { PayloadAction } from '@reduxjs/toolkit';
-import Cookies from 'js-cookie';
+import { call, put, takeEvery, delay } from "redux-saga/effects";
+import { PayloadAction } from "@reduxjs/toolkit";
+import Cookies from "js-cookie";
 import {
-  loginStart,
   loginSuccess,
   loginFailure,
   registerSuccess,
   registerFailure,
   refreshTokenSuccess,
   logout as logoutAction,
-} from '../slices/authSlice';
-import { registerPayload } from '@/types/auth/registerPayload';
-import { loginPayload } from '@/types/auth/loginPayload';
-import { api } from '@/utils/utils';
+} from "../slices/authSlice";
+import { registerPayload } from "@/types/auth/registerPayload";
+import { loginPayload } from "@/types/auth/loginPayload";
+import { api } from "@/utils/utils";
+import { fetchUserByIdRequest } from "../slices/userSlice";
+import { authPayload } from "@/types/auth/authPayload";
+import { AuthApi } from "../api/auth/authApi";
+import { setUserIdInCookie, removeUserIdFromCookie } from "@/utils/cookieUtils"; 
 
-
-function* handleLogin(action: PayloadAction<loginPayload>): Generator {
+function* handleLogin(action: PayloadAction<loginPayload>) {
   try {
-    yield call(api.post, '/auth/login', action.payload);
+    const response: authPayload = yield call(AuthApi.login, action.payload);
     yield put(loginSuccess());
+    if (response) {
+      setUserIdInCookie(response.id); 
+    }
+
+    yield put(fetchUserByIdRequest(response));
     yield call(setTokenRefreshInterval);
   } catch (error: any) {
-    const errorMessage: string = error.response?.data?.message || 'Login failed';
+    const errorMessage: string =
+      error.response?.data?.message || "Login failed";
     yield put(loginFailure(errorMessage));
   }
 }
 
-
-function* handleRegister(action: PayloadAction<registerPayload>): Generator {
+function* handleRegister(action: PayloadAction<registerPayload>) {
   try {
-    yield call(api.post, '/auth/register', action.payload);
+    const response: authPayload = yield call(AuthApi.register, action.payload);
     yield put(registerSuccess());
+    if (response) {
+      setUserIdInCookie(response.id); 
+    }
+
+    yield put(fetchUserByIdRequest(response));
     yield call(setTokenRefreshInterval);
   } catch (error: any) {
-    const errorMessage: string = error.response?.data?.message || 'Registration failed';
+    const errorMessage: string =
+      error.response?.data?.message || "Registration failed";
     yield put(registerFailure(errorMessage));
   }
 }
 
 function* handleRefreshToken(): Generator {
-  try {
-    yield call(api.post, '/auth/refresh-token');
+    yield call(api.post, "/auth/refresh-token");
     yield put(refreshTokenSuccess());
-  } catch (error: any) {
-    console.error('Refresh token failed:', error.response?.data?.message || error.message);
-  }
 }
 
+function* handleLogout() {
+    Cookies.remove("accessToken", { path: "/" });
+    Cookies.remove("refreshToken", { path: "/" });
+    removeUserIdFromCookie(); 
+}
 
 function* setTokenRefreshInterval(): Generator {
   while (true) {
@@ -56,18 +69,11 @@ function* setTokenRefreshInterval(): Generator {
   }
 }
 
-function* handleLogout() {
-  Cookies.remove('accessToken');
-  Cookies.remove('refreshToken');
-
-  yield put(logoutAction());
-}
-
 function* authSaga(): Generator {
-  yield takeEvery('auth/loginStart', handleLogin);
-  yield takeEvery('auth/registerStart', handleRegister);
-  yield takeEvery('auth/refreshToken', handleRefreshToken);
-  yield takeEvery('auth/logout', handleLogout);
+  yield takeEvery("auth/loginStart", handleLogin);
+  yield takeEvery("auth/registerStart", handleRegister);
+  yield takeEvery("auth/refreshToken", handleRefreshToken);
+  yield takeEvery("auth/logout", handleLogout);
 }
 
 export default authSaga;

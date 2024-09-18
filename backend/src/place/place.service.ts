@@ -12,6 +12,7 @@ import { ImageService } from '../image/image.service';
 import { EntityType } from 'src/types/entityType.enum';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { GetPlaceDto } from './dto/get-place.dto';
+import { PlaceResponseDto, PlacesResponseDto } from './dto/place-response.dto';
 
 @Injectable()
 export class PlaceService {
@@ -22,11 +23,11 @@ export class PlaceService {
     @InjectDataSource() private readonly datasource: DataSource,
   ) {}
 
-  async findPlaceByIdWithImages(id: string): Promise<Place> {
+  async findPlaceByIdWithImages(id: string): Promise<PlaceResponseDto> {
     const place = await this.datasource.query(
       `SELECT p.*,
               (SELECT JSON_ARRAYAGG(
-                          JSON_OBJECT('imageLink', img.imageLink, 'id', img.id)
+                          JSON_OBJECT('link', img.imageLink, 'id', img.id)
                       )
                FROM image img 
                WHERE img.entityId = p.id 
@@ -41,7 +42,6 @@ export class PlaceService {
     if (!place.length) {
       throw new NotFoundException(`Place with ID ${id} not found`);
     }
-
     return place[0];
   }
 
@@ -58,11 +58,7 @@ export class PlaceService {
     return place;
   }
 
-  async findAll(query: GetPlaceDto): Promise<{
-    data: { id: number; name: string }[] | Place[];
-    totalCount?: number;
-    totalPages?: number;
-  }> {
+  async findAll(query: GetPlaceDto): Promise<PlacesResponseDto> {
     const { page, limit, name } = query;
     const pageNumber = Math.max(1, page);
     const pageSize = Math.max(1, limit);
@@ -79,10 +75,10 @@ export class PlaceService {
   
     const places = await this.datasource.query(
       `SELECT p.*, 
-              GROUP_CONCAT(
-                  JSON_OBJECT('imageLink', img.imageLink, 'id', img.id) 
+              CONCAT('[', GROUP_CONCAT(
+                  JSON_OBJECT('link', img.imageLink, 'id', img.id) 
                   ORDER BY img.imageLink ASC
-              ) as images
+              ), ']') as images
        FROM place p
        LEFT JOIN image img 
        ON p.id = img.entityId 
@@ -95,6 +91,20 @@ export class PlaceService {
       [pageSize, offset]
     );
   
+    console.log('Place data for limit', limit, "places", places);
+  
+    
+    places.forEach(place => {
+      try {
+        place.images = place.images ? JSON.parse(place.images) : []; 
+      } catch (error) {
+        console.error(`Failed to parse images for place ${place.id}:`, error);
+        place.images = []; 
+      }
+    });
+  
+    console.log("After mapping", places);
+  
     const [totalCountResult] = await this.datasource.query(
       `SELECT COUNT(DISTINCT p.id) as totalCount
        FROM place p
@@ -104,18 +114,19 @@ export class PlaceService {
        AND img.isDeleted = false`
     );
   
+    console.log('Total count', totalCountResult);
+  
     const totalCount = parseInt(totalCountResult.totalCount, 10);
     const totalPages = Math.ceil(totalCount / pageSize);
   
     return {
-      data: places.map((place) => ({
-        ...place,
-        images: place.images ? JSON.parse(`[${place.images}]`) : [],
-      })),
+      data: places,  
       totalCount,
       totalPages,
+      limit,
     };
   }
+  
   
   async createPlace(
     createPlaceDto: CreatePlaceDto,
@@ -146,7 +157,9 @@ export class PlaceService {
     updatePlaceDto: UpdatePlaceDto,
     thumbnail: Express.Multer.File[],
   ): Promise<Place> {
-    const place = await this.placeRepository.findOne({ where: { id, isDeleted: false } });
+    const place = await this.placeRepository.findOne({
+      where: { id, isDeleted: false },
+    });
 
     if (!place) {
       throw new NotFoundException(`Place with id ${id} not found`);
@@ -154,7 +167,7 @@ export class PlaceService {
 
     if (thumbnail) {
       await this.imageService.deleteImageByUrl(place.thumbnailUrl);
-  
+
       place.thumbnailUrl = await this.imageService.handleThumbnailUpload(
         place.id,
         EntityType.PLACE,
@@ -168,7 +181,9 @@ export class PlaceService {
   }
 
   async deletePlace(id: string): Promise<void> {
-    const place = await this.placeRepository.findOne({ where: { id , isDeleted: false} });
+    const place = await this.placeRepository.findOne({
+      where: { id, isDeleted: false },
+    });
 
     if (!place) {
       throw new NotFoundException(`Place with ID ${id} not found`);

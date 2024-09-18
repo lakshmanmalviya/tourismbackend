@@ -1,7 +1,6 @@
+
 export interface Place {
-    id: number;
+    id: string;
     name: string;
     description: string;
-    isDeleted: boolean;
   }
-  
