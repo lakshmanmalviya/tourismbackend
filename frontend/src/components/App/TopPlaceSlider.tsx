@@ -1,17 +1,18 @@
 import React, { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState, AppDispatch } from "../../Redux/store";
-import { fetchAllPlacesStart } from "../../Redux/slices/placeSlice";
+import { useAppDispatch, useAppSelector } from "@/hooks/hook";
 import Slider from "react-slick";
 import Image from "next/image";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import background from "../../assets/topPlaceSliderBg.jpg";
-import { PlaceWithImages } from "../../types/placesApiResponse";
+import { RootState } from "../../Redux/store";
+import { fetchPlacesRequest } from "../../Redux/slices/placeSlice";
+import { Place } from "../../types/place/placePayload";
+import router from "next/router";
 
 const TopPlaceSlider: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>();
-  const { places, loading, error } = useSelector(
+  const dispatch = useAppDispatch();
+  const { places, loading, error } = useAppSelector(
     (state: RootState) => state.place
   );
 
@@ -37,16 +38,12 @@ const TopPlaceSlider: React.FC = () => {
     ],
   };
 
+  const handleOnClick = (id: string) => {
+    router.push(`/places/${id}`);
+  }
   useEffect(() => {
-    dispatch(fetchAllPlacesStart());
+    dispatch(fetchPlacesRequest());
   }, [dispatch]);
-
-  useEffect(() => {
-    if (!loading && !error) {
-      console.log("Places data:", places);
-      console.log("getting more data about place", places?.data?.data);
-    }
-  }, [places, loading, error]);
 
   return (
     <div className="relative bg-cover bg-center h-[100vh] w-full">
@@ -77,16 +74,16 @@ const TopPlaceSlider: React.FC = () => {
             <p className="text-red-600">Error: {error}</p>
           </div>
         )}
-        {!loading && !error && places && places.data?.data.length > 0 ? (
+        {!loading && !error && places && places?.data.length > 0 ? (
           <Slider {...settings} className="w-full">
-            {places.data.data.map((data: PlaceWithImages) => (
-              <div key={data.place.id} className="px-2">
-                <div className="bg-white rounded-lg overflow-hidden shadow-lg flex flex-col items-center">
+            {places?.data.map((data: Place) => (
+              <div key={data.id} className="px-2">
+                <div className="bg-white rounded-lg overflow-hidden shadow-lg flex flex-col items-center h-full">
                   <div className="w-full h-[250px] relative">
-                    {data.images.length > 0 ? (
+                    {data.thumbnailUrl ? (
                       <Image
-                        src={data.images[0].imageLink}
-                        alt={data.place.name}
+                        src={data.thumbnailUrl}
+                        alt={data.name}
                         layout="fill"
                         objectFit="cover"
                         className="rounded-t-lg"
@@ -97,14 +94,15 @@ const TopPlaceSlider: React.FC = () => {
                       </div>
                     )}
                   </div>
+
                   <div className="p-4 flex flex-col items-center">
                     <p className="text-lg md:text-xl font-semibold">
-                      {data.place.name}
+                      {data.name}
                     </p>
-                    <p className="text-center text-gray-700 mt-2">
-                      {data.place.description}
+                    <p className="text-center text-gray-700 mt-2 line-clamp-3">
+                      {data.description}
                     </p>
-                    <button className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                    <button className="mt-auto px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700" onClick={() => {handleOnClick(data.id)}}>
                       Visit
                     </button>
                   </div>

@@ -20,45 +20,28 @@ import { AuthGuard } from '../auth/auth.guard';
 import { RolesGuard } from '../role/role.guard';
 import { Roles } from '../role/roles.decorator';
 import { GetPlaceDto } from './dto/get-place.dto';
+import { Place } from './place.entity';
+import { PlaceResponseDto, PlacesResponseDto } from './dto/place-response.dto';
 
 @Controller('places')
 export class PlaceController {
   constructor(private readonly placeService: PlaceService) {}
 
   @Get()
-  async getAllPlaces(@Query() query: GetPlaceDto) {
+  async getAllPlaces(@Query() query: GetPlaceDto): Promise<PlacesResponseDto> {
     const placesWithImages = await this.placeService.findAll(query);
 
     if (query.name) {
-      return {
-        statusCode: 200,
-        message: 'All places fetched successfully',
-        data: placesWithImages,
-      };
+      return placesWithImages;
     }
-    return {
-      statusCode: 200,
-      message: 'All places fetched successfully',
-      data: placesWithImages,
-      meta: {
-        totalPages: placesWithImages.totalPages,
-        totalCount: placesWithImages.totalCount,
-        currentPage: query.page,
-        limit: query.limit,
-      },
-    };
+    console.log(" this is controller of place ", placesWithImages)
+    return placesWithImages;
   }
 
   @Get(':id')
-  async getPlaceById(@Param('id') id: string) {
+  async getPlaceById(@Param('id') id: string): Promise<PlaceResponseDto> {
     const place = await this.placeService.findPlaceByIdWithImages(id);
-    return {
-      statusCode: 200,
-      message: 'Place fetched successfully',
-      data: {
-        place,
-      },
-    };
+    return place;
   }
 
   @UseGuards(AuthGuard, RolesGuard)
@@ -74,17 +57,13 @@ export class PlaceController {
     @Body() createPlaceDto: CreatePlaceDto,
     @UploadedFiles()
     files: { images?: Express.Multer.File[]; thumbnail: Express.Multer.File[] },
-  ) {
+  ):Promise<Place> {
     if (!files.thumbnail) {
       throw new BadRequestException('Thumbnail is required');
     }
 
     const place = await this.placeService.createPlace(createPlaceDto, files);
-    return {
-      statusCode: 201,
-      message: 'Place created successfully with images',
-      data: place,
-    };
+    return place;
   }
 
   @UseGuards(AuthGuard, RolesGuard)
@@ -96,17 +75,13 @@ export class PlaceController {
     updatePlaceDto: UpdatePlaceDto,
     @UploadedFiles()
     files: { thumbnail: Express.Multer.File[] },
-  ) {
+  ):Promise<Place> {
     const updatedPlace = await this.placeService.updatePlace(
       id,
       updatePlaceDto,
       files.thumbnail,
     );
-    return {
-      statusCode: 200,
-      message: 'Place updated successfully',
-      data: updatedPlace,
-    };
+    return updatedPlace;
   }
 
   @UseGuards(AuthGuard, RolesGuard)
@@ -115,7 +90,6 @@ export class PlaceController {
   async deletePlace(@Param('id') id: string) {
     await this.placeService.deletePlace(id);
     return {
-      statusCode: 200,
       message: 'Place and associated images deleted successfully',
     };
   }

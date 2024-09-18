@@ -15,10 +15,7 @@ export class CustomResponseInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       map((data) => ({
-        statusCode,
-        message: data.message || 'Success',
         error: null,
-        timestamp: new Date().toISOString(),
         path: request.url,
         data: data.data || data,
       })),

@@ -9,10 +9,11 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { TagService } from './tag.service';
-import { CreateTagDto } from './create-tag.dto';
+import { CreateTagDto } from './dto/create-tag.dto';
 import { AuthGuard } from '../auth/auth.guard';
 import { RolesGuard } from 'src/role/role.guard';
 import { Roles } from 'src/role/roles.decorator';
+import { TagResponseDto } from './dto/tags-response.dto';
 
 @Controller('tags')
 export class TagController {
@@ -22,26 +23,15 @@ export class TagController {
   @Roles(['ADMIN'])
   @Post()
   async create(@Body() createTagDto: CreateTagDto) {
-    try {
-      console.log("here .....", createTagDto)
       const tag = await this.tagService.create(createTagDto);
-      return {
-        statusCode: 201,
-        message: 'Tag created successfully',
-        data: tag,
-      };
-    } catch (error) {
-      throw new BadRequestException('Error creating Tag');
-    }
+      return tag;
   }
 
   @Get()
-  async findAll() {
+  async findAll():Promise<TagResponseDto> {
     try {
       const tags = await this.tagService.findAll();
       return {
-        statusCode: 200,
-        message: 'Tags fetched successfully',
         data: tags,
       };
     } catch (error) {
@@ -55,8 +45,6 @@ export class TagController {
       const tag = await this.tagService.findById(id);
 
       return {
-        statusCode: 200,
-        message: 'Tag fetched successfully',
         data: tag,
       };
     } catch (error) {

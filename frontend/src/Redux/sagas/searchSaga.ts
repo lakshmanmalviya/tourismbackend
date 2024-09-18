@@ -9,11 +9,9 @@ async function searchApi(query: SearchQueryDto): Promise<SearchAllResponse> {
 }
 
 function* handleSearch(action: ReturnType<typeof searchRequest>) {
-  try {console.log( " handlesearch has been called ...")
+  try {
     const data : SearchAllResponse  = yield call(searchApi, action.payload);
     yield put(searchSuccess({results: data, entityType: action.payload.entityType}));
-
-    console.log( " search result after api call " , data)
   } catch (error: any) {
     yield put(searchFailure(error.response?.data?.message || 'Search failed'));
   }

@@ -1,10 +1,17 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
+  HttpException
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { UserService } from '../user/user.service';
 import RegisterDto from './dto/register.dto';
 import LoginDto from './dto/login.dto';
 import { Role } from 'src/types/roles.enum';
+import { createToken } from 'src/common/utils/auth/createToken.util';
 
 @Injectable()
 export class AuthService {
@@ -14,68 +21,57 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto) {
-    const { username, email, password, role } = registerDto;
+    // try {
+      const { username, email, password, role } = registerDto;
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+      const user = await this.userService.findByEmail(email)
 
-    const user = await this.userService.createUser({
-      username,
-      email,
-      password: hashedPassword,
-      role: role || Role.PROVIDER,
-    });
+      if (user) {
+        throw new ConflictException("User already exists with the same email")
+      } 
 
-    const accessTokenPayload = {
-      email: user.email,
-      sub: user.id,
-      role: user.role,
-    };
+      const hashedPassword = await bcrypt.hash(password, 10);
 
-    const refreshTokenPayload = { id: user.id };
+      const newUser = await this.userService.createUser({
+        username,
+        email,
+        password: hashedPassword,
+        role: role || Role.PROVIDER,
+      });
 
-    const accessToken = this.jwtService.sign(accessTokenPayload, {
-      expiresIn: '10m',
-    });
-
-    const refreshToken = this.jwtService.sign(refreshTokenPayload, {
-      expiresIn: '7d',
-    });
-
-    return {
-      accessToken,
-      refreshToken,
-    };
+      const { accessToken, refreshToken} = createToken(newUser, this.jwtService);
+      return {
+        accessToken, 
+        refreshToken,
+        id: newUser.id,
+      }
+    // } catch (error) {
+    //   if (error instanceof HttpException)
+    //     throw error;
+    //   else
+    //     throw new InternalServerErrorException('Registration failed');
+    // }
   }
 
   async login(loginDto: LoginDto) {
-    const { email, password } = loginDto;
+    try {
+      const { email, password } = loginDto;
 
-    const user = await this.userService.findByEmail(email);
+      const user = await this.userService.findByEmail(email);
 
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-      throw new UnauthorizedException('Invalid credentials');
+      if (!user || !(await bcrypt.compare(password, user.password))) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      const { accessToken, refreshToken} = createToken(user, this.jwtService);
+      return {
+        accessToken, 
+        refreshToken,
+        id: user.id,
+      }
+    } catch (error) {
+      throw error;
     }
-
-    const accessTokenPayload = {
-      email: user.email,
-      sub: user.id,
-      role: user.role,
-    };
-
-    const refreshTokenPayload = { id: user.id };
-
-    const accessToken = this.jwtService.sign(accessTokenPayload, {
-      expiresIn: '10m',
-    });
-
-    const refreshToken = this.jwtService.sign(refreshTokenPayload, {
-      expiresIn: '7d',
-    });
-
-    return {
-      accessToken,
-      refreshToken,
-    };
   }
 
   async refreshAccessToken(refreshToken: string) {
@@ -83,19 +79,9 @@ export class AuthService {
       const payload = this.jwtService.verify(refreshToken, {
         secret: 'secretkey',
       });
-      const newPayload = {
-        username: payload.username,
-        sub: payload.sub,
-        role: payload.role,
-      };
-      const accessToken = this.jwtService.sign(newPayload, {
-        expiresIn: '10m',
-      });
-      const newRefreshToken = this.jwtService.sign(newPayload, {
-        expiresIn: '7d',
-      });
 
-      return { accessToken, newRefreshToken };
+      const user = await this.userService.findUserById(payload.id)
+      return createToken(user, this.jwtService);
     } catch (e) {
       throw new UnauthorizedException('Invalid refresh token');
     }

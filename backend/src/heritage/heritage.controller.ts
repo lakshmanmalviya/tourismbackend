@@ -23,37 +23,31 @@ import { AuthGuard } from '../auth/auth.guard';
 import { RolesGuard } from '../role/role.guard';
 import { Roles } from '../role/roles.decorator';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
-
+// import { HeritageResponsesDto } from './dto/heritage-response.dto';
+// import { HeritageDto } from './dto/heritage-response.dto';
+import { HeritagesResponseDto, HeritageResponseDto } from './dto/heritage-response.dto';
+import { Heritage } from './heritage.entity';
 @Controller('heritages')
 export class HeritageController {
   constructor(private readonly heritageService: HeritageService) {}
 
   @Get()
-  async findAll(@Query() query: PaginationDto) {
+  async findAll(@Query() query: PaginationDto):Promise<HeritagesResponseDto> {
     const { page = 1, limit = 5 } = query;
     const { data, totalCount, totalPages } =
       await this.heritageService.findAll(query);
     return {
-      statusCode: 200,
-      message: 'All heritages fetched successfully',
-      data,
-      meta: {
+        data,
         totalCount,
         totalPages,
-        currentPage: page,
-        limit,
-      },
+        limit
     };
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string):Promise<Heritage> {
     const heritage = await this.heritageService.findOne(id);
-    return {
-      statusCode: 200,
-      message: 'Heritage fetched successfully',
-      data: heritage,
-    };
+    return heritage;
   }
 
   @UseGuards(AuthGuard, RolesGuard)
@@ -69,7 +63,7 @@ export class HeritageController {
     @Body() createHeritageDto: CreateHeritageDto,
     @UploadedFiles()
     files: { images?: Express.Multer.File[]; thumbnail: Express.Multer.File[] },
-  ) {
+  ):Promise<Heritage> {
     if (!files.thumbnail) {
       throw new BadRequestException('Thumbnail is required');
     }
@@ -78,11 +72,7 @@ export class HeritageController {
       createHeritageDto,
       files,
     );
-    return {
-      statusCode: 201,
-      message: 'Heritage created successfully',
-      data: heritage,
-    };
+    return heritage;
   }
 
   @Patch(':id')
@@ -93,17 +83,13 @@ export class HeritageController {
     @Param('id') id: string,
     @Body() updateHeritageDto: UpdateHeritageDto,
     @UploadedFiles() thumbnail?: Express.Multer.File[],
-  ) {
+  ):Promise<Heritage> {
     const heritage = await this.heritageService.update(
       id,
       updateHeritageDto,
       thumbnail,
     );
-    return {
-      statusCode: 200,
-      message: 'Heritage updated successfully',
-      data: heritage,
-    };
+    return heritage;
   }
 
   @Delete(':id')
@@ -112,7 +98,6 @@ export class HeritageController {
   async remove(@Param('id') id: string) {
     await this.heritageService.remove(id);
     return {
-      statusCode: 200,
       message: 'Heritage deleted successfully',
     };
   }
