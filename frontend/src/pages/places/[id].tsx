@@ -172,9 +172,9 @@ const PlaceDetails = () => {
                 <Image
                   src={img.link}
                   alt="place images"
-                  width={500}
+                  width={700}
                   height={600}
-                  className="w-full h-[80vh] md:h-[70vh] sm:h-[60vh] object-cover"
+                  className="w-full h-[80vh] md:h-[70vh] sm:h-[60vh] object-contain"
                 />
               </div>
             ))}
