@@ -79,7 +79,6 @@ function* deletePlaceSaga(action: PayloadAction<string>) {
   }
 }
 
-// Watcher Sagas
 export function* placeSaga() {
   yield takeLatest(fetchPlacesRequest.type, fetchPlacesSaga);
   yield takeLatest(fetchPlaceNameRequest.type, fetchPlaceNameSaga);
