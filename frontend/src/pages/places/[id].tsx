@@ -34,9 +34,7 @@ const PlaceDetails = () => {
   );
 
   const [place, setPlace] = useState<Place | null>(null);
-  const [heritages, setHeritages] = useState<HeritageResponse[] | null>(
-    null
-  );
+  const [heritages, setHeritages] = useState<HeritageResponse[] | null>(null);
   const [hotels, setHotels] = useState<HotelResponse[] | null>(null);
   const [open, setOpen] = useState(false);
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
@@ -83,8 +81,11 @@ const PlaceDetails = () => {
     if (listOfHotelsResponse?.data) {
       setHotels(listOfHotelsResponse.data);
     }
-  }, [placeResponse, listOfHeritagesResponse?.data, listOfHotelsResponse?.data]);
-
+  }, [
+    placeResponse,
+    listOfHeritagesResponse?.data,
+    listOfHotelsResponse?.data,
+  ]);
 
   const getGridClass = (index: number, totalImages: number) => {
     if (totalImages === 1) {
@@ -297,42 +298,48 @@ const PlaceDetails = () => {
         </Modal>
       )}
 
-    
-    {
-      
-    }  <div className="mt-20">
-        <h1 className="text-2xl font-bold">Heritages sites </h1>
-      </div>
+      {heritages ? (
+        <div>
+          <div className="mt-20">
+            <h1 className="text-2xl font-bold">Heritages sites </h1>
+          </div>
+        </div>
+      ) : (
+        <div></div>
+      )}
 
       <div>
         <Slider {...settingsForHeritage} className="group">
-          {
-            heritages?.map((heritage, index) => (
-              <div key={index} className="relative mr-10 p-5">
-                <div className="relative w-full h-[80vh] md:h-[70vh] sm:h-[60vh]">
-                  
-                  <Image
-                    src={heritage?.thumbnailUrl}
-                    alt="heritage thumbnail"
-                    width={400}
-                    height={600}
-                    className="w-full h-[80vh] md:h-[70vh] sm:h-[60vh] object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center transition-opacity duration-300 hover:bg-opacity-50">
-                    <h1 className="text-white text-2xl font-semibold transition-transform duration-300 transform hover:scale-125">
-                      {heritage.name}
-                    </h1>
-                  </div>
+          {heritages?.map((heritage, index) => (
+            <div key={index} className="relative mr-10 p-5">
+              <div className="relative w-full h-[80vh] md:h-[70vh] sm:h-[60vh]">
+                <Image
+                  src={heritage?.thumbnailUrl}
+                  alt="heritage thumbnail"
+                  width={400}
+                  height={600}
+                  className="w-full h-[80vh] md:h-[70vh] sm:h-[60vh] object-cover"
+                />
+                <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center transition-opacity duration-300 hover:bg-opacity-50">
+                  <h1 className="text-white text-2xl font-semibold transition-transform duration-300 transform hover:scale-125">
+                    {heritage.name}
+                  </h1>
                 </div>
               </div>
-            ))}
+            </div>
+          ))}
         </Slider>
       </div>
 
-      <div className="mt-20">
-        <h1 className="text-2xl font-bold">Places to stay </h1>
-      </div>
-
+      {hotels ? (
+        <div>
+          <div className="mt-20">
+            <h1 className="text-2xl font-bold">Places to stay </h1>
+          </div>
+        </div>
+      ) : (
+        <div></div>
+      )}
       <div>
         <Slider {...settingsForHeritage} className="group">
           {hotels &&
