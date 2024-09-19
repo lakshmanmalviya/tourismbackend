@@ -28,7 +28,6 @@ const SearchResultCard: React.FC<SearchResultCardProps> = ({
 
   const totalRating = 5;
   const handleClick = () => {
-    console.log(" this is entityTyepe" , entityType) 
     if (entityType === EntityType.HOTEL) {
       window.location.href = `/hotels/${id}`;
     } else if (entityType === EntityType.HERITAGE) {
