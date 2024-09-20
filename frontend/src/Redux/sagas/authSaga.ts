@@ -15,14 +15,14 @@ import { api } from "@/utils/utils";
 import { fetchUserByIdRequest } from "../slices/userSlice";
 import { authPayload } from "@/types/auth/authPayload";
 import { AuthApi } from "../api/auth/authApi";
-import { setUserIdInCookie, removeUserIdFromCookie } from "@/utils/cookieUtils"; 
+import { setUserIdInCookie, removeUserIdFromCookie } from "@/utils/cookieUtils";
 
 function* handleLogin(action: PayloadAction<loginPayload>) {
   try {
     const response: authPayload = yield call(AuthApi.login, action.payload);
     yield put(loginSuccess());
     if (response) {
-      setUserIdInCookie(response.id); 
+      setUserIdInCookie(response.id);
     }
 
     yield put(fetchUserByIdRequest(response));
@@ -39,7 +39,7 @@ function* handleRegister(action: PayloadAction<registerPayload>) {
     const response: authPayload = yield call(AuthApi.register, action.payload);
     yield put(registerSuccess());
     if (response) {
-      setUserIdInCookie(response.id); 
+      setUserIdInCookie(response.id);
     }
 
     yield put(fetchUserByIdRequest(response));
@@ -52,18 +52,19 @@ function* handleRegister(action: PayloadAction<registerPayload>) {
 }
 
 function* handleRefreshToken(): Generator {
-    yield call(api.post, "/auth/refresh-token");
-    yield put(refreshTokenSuccess());
+  yield call(api.post, "/auth/refresh-token");
+  yield put(refreshTokenSuccess());
 }
 
 function* handleLogout() {
-    Cookies.remove("accessToken", { path: "/" });
-    Cookies.remove("refreshToken", { path: "/" });
-    removeUserIdFromCookie(); 
+  Cookies.remove("accessToken", { path: "/" });
+  Cookies.remove("refreshToken", { path: "/" });
+  removeUserIdFromCookie();
 }
 
 function* setTokenRefreshInterval(): Generator {
   while (true) {
+    console.log(" REFRESH TOKEN GETTING CALLED  ")
     yield delay(9 * 60 * 1000);
     yield call(handleRefreshToken);
   }

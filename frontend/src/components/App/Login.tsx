@@ -80,7 +80,7 @@ const Login = ({ toggleForm, onSuccess }: { toggleForm: () => void, onSuccess: (
       </form>
 
       <a className="block text-center mt-6 text-green-500 text-lg cursor-pointer hover:underline" onClick={toggleForm}>
-        Don&apos;t have an account? Register
+        Don &apos; t have an account? Register
       </a>
     </div>
   );

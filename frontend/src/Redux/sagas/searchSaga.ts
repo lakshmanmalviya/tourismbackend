@@ -1,4 +1,4 @@
-import { call, put, takeLatest } from 'redux-saga/effects';
+import { call, put, takeEvery, takeLatest } from 'redux-saga/effects';
 import { searchRequest, searchSuccess, searchFailure } from '../slices/searchSlice';
 import { SearchQueryDto, SearchAllResponse } from '../../types/search/searchPayload';
 import { api } from '@/utils/utils';
@@ -18,5 +18,5 @@ function* handleSearch(action: ReturnType<typeof searchRequest>) {
 }
 
 export default function* searchSaga() {
-  yield takeLatest(searchRequest.type, handleSearch);
+  yield takeEvery(searchRequest.type, handleSearch);
 }
