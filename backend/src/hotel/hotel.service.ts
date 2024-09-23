@@ -16,6 +16,9 @@ import { UpdateHotelDto } from './dto/update-hotel.dto';
 import { Role } from 'src/types/roles.enum';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { GetHotelDto } from './dto/get-hotel.dto';
+import { HotelResponse } from 'src/search/dto/search-response.dto';
+import { HotelResponseDto, HotelsResponseDto } from './dto/hotel-response.dto';
+import { plainToClass } from 'class-transformer';
 
 @Injectable()
 export class HotelService {
@@ -28,13 +31,7 @@ export class HotelService {
     @InjectDataSource() private readonly datasource: DataSource,
   ) {}
 
-
-
-  async findAll(queryParam: GetHotelDto): Promise<{
-    data: Hotel[];
-    totalCount: number;
-    totalPages: number;
-  }> {
+  async findAll(queryParam: GetHotelDto): Promise<HotelsResponseDto> {
     const { page = 1, limit = 5, ownerId } = queryParam;
     const pageNumber = page;
     const pageSize = limit;
@@ -108,13 +105,14 @@ export class HotelService {
         data: formattedHotels,
         totalCount,
         totalPages,
+        limit,
       };
     } catch (error) {
       console.error('Error in findAll:', error);
     }
   }
 
-  async findOne(id: string): Promise<Hotel> {
+  async findOne(id: string): Promise<HotelResponseDto> {
     const hotelResult = await this.datasource.query(
       `SELECT h.*,
                  JSON_OBJECT(
@@ -159,7 +157,7 @@ export class HotelService {
 
   async findPending(
     paginationDto: PaginationDto,
-  ): Promise<{ data: Hotel[]; total: number; page: number; limit: number }> {
+  ): Promise<HotelsResponseDto> {
     const { page, limit } = paginationDto;
     const pageNumber = Math.max(1, page);
     const pageSize = Math.max(1, limit);
@@ -212,8 +210,8 @@ export class HotelService {
 
       return {
         data: formattedHotels,
-        total,
-        page: pageNumber,
+        totalCount: total,
+        totalPages: pageNumber,
         limit: pageSize,
       };
     } catch (error) {
@@ -288,7 +286,8 @@ export class HotelService {
     thumbnail: Express.Multer.File[],
   ): Promise<Hotel> {
     const hotel = await this.hotelRepository.findOne({
-      where: { id, isDeleted: false },relations: {owner: true},
+      where: { id, isDeleted: false },
+      relations: { owner: true },
     });
 
     if (!hotel) {

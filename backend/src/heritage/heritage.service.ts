@@ -11,6 +11,7 @@ import { ImageService } from '../image/image.service';
 import { EntityType } from 'src/types/entityType.enum';
 import { PlaceService } from 'src/place/place.service';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { HeritagesResponseDto } from './dto/heritage-response.dto';
 
 @Injectable()
 export class HeritageService {
@@ -61,7 +62,7 @@ export class HeritageService {
 
   async findAll(
     paginationDto: PaginationDto,
-  ): Promise<{ data: Heritage[]; totalCount: number; totalPages: number }> {
+  ): Promise<HeritagesResponseDto> {
     const { page, limit } = paginationDto;
     const pageNumber = Math.max(1, page);
     const pageSize = Math.max(1, limit);
@@ -77,7 +78,7 @@ export class HeritageService {
           ) AS place,
           COALESCE(
             JSON_ARRAYAGG(
-              JSON_OBJECT('id', img.id, 'imageLink', img.imageLink)
+              JSON_OBJECT('id', img.id, 'link', img.imageLink)
             ), '[]'
           ) AS images
         FROM heritage h
@@ -117,49 +118,49 @@ export class HeritageService {
       data: heritages,
       totalCount,
       totalPages,
+      limit
     };
   }
 
-  async findOne(id: string): Promise<{ heritage: Heritage }> {
-    const heritageResult = await this.datasource.query(
-      `SELECT h.id,
-      h.name,
-      h.description,
-      h.thumbnailUrl,
-      h.mapUrl,
-      h.isDeleted,
-        JSON_OBJECT(
-          'id', p.id,
-          'name', p.name,
-          'description', p.description
-          'thumbnailUrl', p.thumbnailUrl,
-        ) AS place,
-        COALESCE(
-          JSON_ARRAYAGG(
-            JSON_OBJECT('id', img.id, 'imageLink', img.imageLink)
-          ), '[]'
-        ) AS images
-      FROM heritage h
-      INNER JOIN place p ON h.placeId = p.id
-      LEFT JOIN image img ON img.entityId = h.id
-      AND img.entityType = 'HERITAGE'
-      AND img.isDeleted = false
-      WHERE h.id = ? AND h.isDeleted = false
-      GROUP BY h.id, p.id`,
-      [id],
-    );
-
-    if (!heritageResult || heritageResult.length === 0) {
-      throw new NotFoundException(`Heritage with id ${id} not found`);
+  async findOne(id: string): Promise<Heritage> {
+    try {
+      const heritageResult = await this.datasource.query(
+        `SELECT h.*,
+          JSON_OBJECT(
+            'id', p.id,
+            'name', p.name,
+            'description', p.description
+          ) AS place,
+          COALESCE(
+            JSON_ARRAYAGG(
+              JSON_OBJECT('id', img.id, 'link', img.imageLink)
+            ), '[]'
+          ) AS images
+        FROM heritage h
+        LEFT JOIN place p ON h.placeId = p.id
+        LEFT JOIN image img ON img.entityId = h.id
+        AND img.entityType = 'HERITAGE'
+        AND img.isDeleted = false
+        WHERE h.id = ? AND h.isDeleted = false
+        GROUP BY h.id, p.id`,
+        [id],
+      );
+      if (!heritageResult || heritageResult.length === 0) {
+        throw new NotFoundException(`Heritage with id ${id} not found`);
+      }
+    
+      const heritage = heritageResult[0];
+    
+      heritage.images = heritage.images ? JSON.parse(heritage.images) : [];
+    
+      return heritage;
+    }
+    catch(err) {
+      console.log(err);
     }
 
-    const heritage = heritageResult[0];
-
-    heritage.images = heritage.images ? JSON.parse(heritage.images) : [];
-
-    return { heritage };
   }
-
+  
   async update(
     id: string,
     updateHeritageDto: UpdateHeritageDto,

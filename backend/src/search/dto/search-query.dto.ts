@@ -9,6 +9,7 @@ export class SearchQueryDto extends PaginationDto {
   keyword?: string;
 
   @IsEnum(EntityType)
+  @IsOptional()
   entityType: EntityType;
 
   @IsOptional()
@@ -28,7 +29,7 @@ export class SearchQueryDto extends PaginationDto {
   placeId?: string;
 
   @IsOptional()
-  tagIds?: string[];
+  tagIds?: string;
 
   @IsOptional()
   @IsString()

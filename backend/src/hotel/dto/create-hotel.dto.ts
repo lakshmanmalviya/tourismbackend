@@ -10,7 +10,6 @@ import {
   IsNotEmpty,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { RegistrationStatus } from 'src/types/registrationStatus.enum';
 
 export class CreateHotelDto {
   @IsString()
@@ -23,7 +22,6 @@ export class CreateHotelDto {
   @IsUrl()
   websiteLink?: string;
 
-  @IsOptional()
   mapUrl: string;
 
   @IsInt()
@@ -54,11 +52,4 @@ export class CreateHotelDto {
 
   @IsString()
   userId: string;
-
-  @IsEnum(RegistrationStatus)
-  @IsOptional()
-  @Transform(
-    ({ value }) => RegistrationStatus[value as keyof typeof RegistrationStatus],
-  )
-  registrationStatus?: RegistrationStatus;
 }

@@ -1,9 +1,44 @@
+@import url('https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  html {
+    font-family: "Raleway", sans-serif;
+    scrollbar-width: none;
+  }
+}
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
+  html, body {
+    overflow-x: hidden;
+  }
+}
+
+@keyframes shine {
+  0% {
+    background-position: 0%;
+  }
+  60% {
+    background-position: 180px;
+  }
+  100% {
+    background-position: 180px;
+  }
+}
+
+.shine-text {
+  background: linear-gradient(to right, #5aaa65 0%, rgb(77, 255, 77) 10%, #0c770c 20%);
+  background-size: 200%;
+  background-position: 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shine 3s infinite linear;
 }

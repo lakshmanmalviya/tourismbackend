@@ -12,7 +12,10 @@ import {
   Get,
   Query,
 } from '@nestjs/common';
-import { FileFieldsInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import {
+  FileFieldsInterceptor,
+  FilesInterceptor,
+} from '@nestjs/platform-express';
 import { HotelService } from './hotel.service';
 import { CreateHotelDto } from './dto/create-hotel.dto';
 import { AuthGuard } from '../auth/auth.guard';
@@ -24,20 +27,18 @@ import { UpdateHotelDto } from './dto/update-hotel.dto';
 import { RegistrationStatus } from 'src/types/registrationStatus.enum';
 import { GetHotelDto } from './dto/get-hotel.dto';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { HotelResponseDto, HotelsResponseDto } from './dto/hotel-response.dto';
+import { Hotel } from './hotel.entity';
 
 @Controller('hotels')
 export class HotelController {
   constructor(private readonly hotelService: HotelService) {}
 
   @Get()
-  async findAll(
-    @Query() query: GetHotelDto,
-  ) {
+  async findAll(@Query() query: GetHotelDto):Promise<HotelsResponseDto> {
     try {
       const hotels = await this.hotelService.findAll(query);
       return {
-        statusCode: 200,
-        message: 'Hotels fetched successfully',
         data: hotels.data,
         totalCount: hotels.totalCount,
         totalPages: hotels.totalPages,
@@ -49,38 +50,24 @@ export class HotelController {
   }
 
   @Get('pending')
-  async findPending(
-    @Query() query: PaginationDto
-  ) {
+  async findPending(@Query() query: PaginationDto):Promise<HotelsResponseDto> {
     try {
-      console.log( " pending query ...." , query )
       const hotels = await this.hotelService.findPending(query);
-      return {
-        statusCode: 200,
-        message: 'Pending hotels fetched successfully',
-        data: hotels.data,
-        total: hotels.total,
-        page: hotels.page,
-        limit: hotels.limit,
-      };
+      return hotels;
     } catch (error) {
       throw new BadRequestException('Error fetching pending hotels');
     }
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string): Promise<HotelResponseDto> {
     try {
       const hotel = await this.hotelService.findOne(id);
-      return {
-        statusCode: 200,
-        message: 'Hotel fetched successfully',
-        data: hotel,
-      };
+      return hotel;
     } catch (error) {
       throw new BadRequestException('Error fetching hotel');
     }
-  }
+  }x
 
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(['ADMIN', 'PROVIDER'])
@@ -95,21 +82,16 @@ export class HotelController {
     @Body() createHotelDto: Record<string, any>,
     @UploadedFiles()
     files: { images?: Express.Multer.File[]; thumbnail: Express.Multer.File[] },
-  ) {
-      if (!files.thumbnail) {
-        throw new BadRequestException('thumbnail is required');
-      }
-      
-      const transformedDto = plainToInstance(CreateHotelDto, createHotelDto);
-      await validateOrReject(transformedDto);
+  ):Promise<Hotel> {
+    if (!files.thumbnail) {
+      throw new BadRequestException('thumbnail is required');
+    }
 
-      const hotel = await this.hotelService.create(transformedDto, files);
-      return {
-        statusCode: 201,
-        message: 'Hotel created successfully with images',
-        data: hotel,
-      };
-   
+    const transformedDto = plainToInstance(CreateHotelDto, createHotelDto);
+    await validateOrReject(transformedDto);
+
+    const hotel = await this.hotelService.create(transformedDto, files);
+    return hotel;
   }
 
   @UseGuards(AuthGuard, RolesGuard)
@@ -120,7 +102,7 @@ export class HotelController {
     @Param('id') id: string,
     @Body() updateHotelDto: Record<string, any>,
     @UploadedFiles() thumbnail: Express.Multer.File[],
-  ) {
+  ):Promise<Hotel> {
     try {
       const transformedDto = plainToInstance(UpdateHotelDto, updateHotelDto);
       await validateOrReject(transformedDto);
@@ -130,11 +112,7 @@ export class HotelController {
         transformedDto,
         thumbnail,
       );
-      return {
-        statusCode: 200,
-        message: 'Hotel updated successfully with images',
-        data: updatedHotel,
-      };
+      return updatedHotel;
     } catch (error) {
       throw new BadRequestException('Error updating hotel');
     }
@@ -146,17 +124,13 @@ export class HotelController {
   async updateStatus(
     @Param('hotelId') hotelId: string,
     @Body('status') status: RegistrationStatus,
-  ) {
+  ):Promise<Hotel> {
     try {
       const updatedHotel = await this.hotelService.updateStatus(
         hotelId,
         status,
       );
-      return {
-        statusCode: 200,
-        message: 'Hotel status updated successfully',
-        data: updatedHotel,
-      };
+      return updatedHotel;
     } catch (error) {
       throw new BadRequestException('Error updating hotel status');
     }
@@ -168,10 +142,11 @@ export class HotelController {
   async softDelete(@Param('id') id: string) {
     try {
       await this.hotelService.softDelete(id);
-      return {
-        statusCode: 200,
-        message: 'Hotel deleted successfully',
-      };
+      // return {
+      //   statusCode: 200,
+      //   message: 'Hotel deleted successfully',
+      // };
+      return;
     } catch (error) {
       throw new BadRequestException('Error deleting hotel');
     }

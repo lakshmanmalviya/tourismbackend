@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { SearchQueryDto, SearchAllResponse, SearchHeritagesResponse, SearchHotelsResponse, SearchSuccessPayload } from '../../types/search/searchPayload';
-import { EntityType } from '@/types/search/searchPayload';
+import { SearchEntityType } from '../../types/search/searchPayload';
 
 interface SearchState {
   loading: boolean;
@@ -16,7 +16,7 @@ interface SearchState {
   HOTEL: {
     query: SearchQueryDto;
     results: SearchHotelsResponse | null;
-  }
+  } 
 }
 
 const initialState: SearchState = {
@@ -24,19 +24,19 @@ const initialState: SearchState = {
   error: null,
   ALL: {
     query: {
-      entityType: EntityType.ALL
+      entityType: SearchEntityType.ALL
     },
     results: null
   },
   HERITAGE: {
     query: {
-      entityType: EntityType.HERITAGE
+      entityType: SearchEntityType.HERITAGE
     },
     results: null
   },
   HOTEL: {
     query: {
-      entityType: EntityType.HOTEL
+      entityType: SearchEntityType.HOTEL
     },
     results: null
   }
@@ -47,7 +47,6 @@ const searchSlice = createSlice({
   initialState,
   reducers: {
     searchRequest(state, action: PayloadAction<SearchQueryDto>) {
-      console.log("calling searchRequest.....");
       state.loading = true;
       state.error = null;
       state[action.payload.entityType].query = action.payload;

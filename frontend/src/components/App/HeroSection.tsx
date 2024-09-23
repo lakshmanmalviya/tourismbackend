@@ -2,8 +2,18 @@ import TypeWriter from "typewriter-effect";
 import { CiSearch } from "react-icons/ci";
 import Image from "next/image";
 import background from "../../assets/heroSectionBg.jpg";
+import { useState } from "react";
+import router from "next/router";
 
 const HeroSection = () => {
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {  
+      router.push(`/Discover?searchTerm=${searchTerm.trim()}`);
+    }
+  };
+
   return (
     <div className="relative flex items-center justify-center h-[50vh] md:h-[60vh] lg:h-[70vh]">
       <Image
@@ -37,6 +47,9 @@ const HeroSection = () => {
           <input
             type="text"
             placeholder="Place to go"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDownCapture={handleKeyDown}  
             className="w-full bg-transparent outline-none placeholder-gray-500"
           />
         </div>
