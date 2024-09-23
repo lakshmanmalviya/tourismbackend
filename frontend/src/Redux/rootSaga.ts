@@ -4,6 +4,7 @@ import searchSaga from "./sagas/searchSaga";
 import { placeSaga } from "./sagas/placeSaga";
 import { userSaga } from "./sagas/userSaga";
 import tagSaga from "./sagas/tagSaga"
+import heritageSaga from './sagas/heritageSaga'
 
 export default function* rootSaga() {
   yield all([
@@ -11,6 +12,7 @@ export default function* rootSaga() {
     searchSaga(),
     placeSaga(),
     userSaga(),
-    tagSaga()
+    tagSaga(),
+    heritageSaga()
   ]);
 }
