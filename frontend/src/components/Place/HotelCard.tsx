@@ -10,7 +10,7 @@ export default function Card({ thumbnail, rating, id, title, description }: { th
 
     <a
       href="#"
-      className="card relative block w-[clamp(300px,50vmin,600px)] aspect-[4/3] rounded-2xl overflow-hidden transform"
+      className="card shadow-lg relative block w-[clamp(300px,50vmin,600px)] aspect-[4/3] rounded-2xl overflow-hidden transform"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -26,17 +26,20 @@ export default function Card({ thumbnail, rating, id, title, description }: { th
           />
       </div>
 
-      <span className="absolute bottom-0 left-0 w-full bg-white/3 backdrop-blur-[16px] p-6 grid gap-1 h-[30%] items-center">
+      <span className="absolute bottom-0 left-0 w-full bg-white  p-6 grid gap-1 h-[40%] items-center">
         <span className="text-lg font-semibold -mb-2 ">{title}</span>
         <div className="flex items-center gap-1  text-xs">
             
             {[...Array(5)].map((_, index) =>
               index < rating ? (
-                <FaStar key={index} className="text-yellow-400" /> 
+                <FaStar key={index} className="text-green-600" /> 
               ) : undefined
             )}
             <span className="ml-2 text-xs ">{rating} rating</span>
 
+          </div>
+          <div>
+            <p className="line-clamp-1">{description}</p>
           </div>
    
       </span>

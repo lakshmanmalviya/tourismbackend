@@ -154,10 +154,11 @@ const PlaceDetails = () => {
       },
     ],
   };
-
+  
   const settingsForHotels = {
     infinite: true,
     speed: 500,
+    dots: true,
     slidesToShow: 3,
     slidesToScroll: 1,
     arrows: true,
