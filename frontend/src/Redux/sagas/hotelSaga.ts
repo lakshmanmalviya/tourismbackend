@@ -57,9 +57,7 @@ function* fetchHotelByIdSaga(action: PayloadAction<string>) {
 
 function* createHotelSaga(action: PayloadAction<FormData>) {
   try {
-    console.log(" this is saga of hotel : "  , action.payload)
     yield call(HotelApi.createHotel, action.payload);
-    console.log( "the api resonsded")
     yield put(createHotelSuccess());
   } catch (error:any) {
     yield put(createHotelFailure(error.message));
