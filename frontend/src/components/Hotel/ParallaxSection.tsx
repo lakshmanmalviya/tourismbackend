@@ -3,8 +3,9 @@ import { useEffect } from 'react';
 interface ParallaxComponent {
     title: string;
     place: string;
+    thumbnail: string;
 }
-const ParallaxComponent: React.FC<ParallaxComponent> = ({title, place})=> {
+const ParallaxComponent: React.FC<ParallaxComponent> = ({title, place, thumbnail})=> {
   useEffect(() => {
     const handleScroll = () => {
       const parallax = document.querySelector('.parallax-image') as HTMLElement | null;
@@ -31,7 +32,7 @@ const ParallaxComponent: React.FC<ParallaxComponent> = ({title, place})=> {
     <div className="relative h-screen overflow-hidden">
       <div className="parallax-image absolute inset-0">
         <img
-          src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/225363/sterling-davis-4iXagiKXn3Y-unsplash-min.jpg"
+          src={thumbnail}
           alt="Photo of city during a sunset"
           className="w-full h-full object-cover"
         />

@@ -105,7 +105,6 @@ const hotelSlice = createSlice({
       state.success = false;
     },
 
-    // Update hotel status
     updateHotelStatusRequest: (state) => {
       state.loading = true;
       state.success = false;
