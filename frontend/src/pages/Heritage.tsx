@@ -4,6 +4,7 @@ import HeritageFilter from "@/components/Heritage/HeritageFilter";
 import SearchedCard from "@/components/common/SearchResultCard";
 import { searchRequest } from "../Redux/slices/searchSlice";
 import {
+    HeritageResponse,
   SearchEntityType,
   SearchResponseItem,
 } from "@/types/search/searchPayload";
@@ -17,7 +18,7 @@ const Heritage: React.FC = () => {
   const searchResults = useAppSelector(
     (state: RootState) => state.search.HERITAGE.results
   );
-  const [value, setValues] = useState<SearchResponseItem[]>([]);
+  const [value, setValues] = useState<HeritageResponse[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [selectedPlaceId, setSelectedPlaceId] = useState<string>("");
   const [selectedTags, setSelectedTags] = useState<string>("");
@@ -92,6 +93,7 @@ const Heritage: React.FC = () => {
                   pageType={SearchEntityType.HERITAGE}
                   entityType={EntityType.HERITAGE}
                   id={result.id}
+                  tags={result.tags}
                 />
               ))
             ) : (

@@ -13,6 +13,7 @@ interface SearchResultCardProps {
   price?: number;
   rating?: number;
   id: string;
+  tags?:string[];
 }
 
 const SearchResultCard: React.FC<SearchResultCardProps> = ({
@@ -24,6 +25,7 @@ const SearchResultCard: React.FC<SearchResultCardProps> = ({
   price,
   rating = 0,
   id,
+  tags
 }) => {
 
   const totalRating = 5;
@@ -83,10 +85,19 @@ const SearchResultCard: React.FC<SearchResultCardProps> = ({
             <div></div>
           )}
           
-          
-          <div className="text-sm mt-5 text-gray-700 overflow-hidden line-clamp-3 max-h-16">
+          <div className="text-sm my-5 text-gray-700 overflow-hidden line-clamp-3 max-h-16">
             {description}
           </div>
+
+          {
+            tags && tags.map(tag => {
+              return (
+                <span key={tag} className="mr-2 p-1 text-xs mt-5 rounded-full text-white bg-green-900 font-semibold">
+                  {tag}
+                </span>
+              )
+            })
+          }
         </div>
       </div>
     </div>
