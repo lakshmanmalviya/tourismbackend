@@ -13,7 +13,7 @@ export interface SearchQueryDto {
   hotelStarRating?: number;
   minPrice?: number;
   maxPrice?: number;
-  tagIds?: string[];
+  tagIds?: string;
   page?: number;
   limit?: number;
   sortBy?: string;

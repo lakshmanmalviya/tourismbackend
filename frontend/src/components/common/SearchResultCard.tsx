@@ -38,7 +38,7 @@ const SearchResultCard: React.FC<SearchResultCardProps> = ({
   };
   return (
     <div
-      className="rounded-lg bg-white flex flex-col md:flex-row gap-6 shadow-sm mb-8 w-full md:w-[900px] max-w-[100%] hover:cursor-pointer"
+      className="rounded-lg bg-white flex flex-col md:flex-row gap-6 shadow-sm mb-8 w-full md:w-[800px] max-w-[100%] hover:cursor-pointer"
       onClick={handleClick}
     >
       <div className="w-full md:w-72 h-52">
