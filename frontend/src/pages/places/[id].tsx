@@ -18,7 +18,7 @@ import {
 } from "@/types/search/searchPayload";
 import { Place } from "@/types/place/placePayload";
 
-import PlaceDescription from "../../components/Place/PlaceDescription";
+import PlaceDescription from "../../components/common/DescriptionMapslider";
 
 const PlaceDetails = () => {
   const router = useRouter();
