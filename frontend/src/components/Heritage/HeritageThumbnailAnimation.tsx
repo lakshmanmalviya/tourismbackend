@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { URL } from 'url';
 
 interface AnimatedSection {
     name?: string;
