@@ -5,6 +5,7 @@ import searchReducer from "./slices/searchSlice";
 import userReducer from "./slices/userSlice";
 import tagReducer from './slices/tagSlice'
 import heritageReducer from './slices/heritageSlice'
+import hotelReducer from "./slices/hotelSlice"
 
 export const rootReducer = combineReducers({
   auth: authReducer,
@@ -12,5 +13,6 @@ export const rootReducer = combineReducers({
   search: searchReducer,
   heritage: heritageReducer,
   user:userReducer,
-  tag: tagReducer
+  tag: tagReducer,
+  hotel: hotelReducer
 });
