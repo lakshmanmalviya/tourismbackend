@@ -4,6 +4,7 @@ import { FaCircle, FaRegCircle } from "react-icons/fa6";
 import { TbReceiptRupee } from "react-icons/tb";
 import { EntityType } from "@/types/enum/entityType.enum";
 import { SearchEntityType } from "@/types/search/searchPayload";
+
 interface SearchResultCardProps {
   name: string;
   description: string;
@@ -13,6 +14,7 @@ interface SearchResultCardProps {
   price?: number;
   rating?: number;
   id: string;
+  tags?:string[];
 }
 
 const SearchResultCard: React.FC<SearchResultCardProps> = ({
@@ -24,6 +26,7 @@ const SearchResultCard: React.FC<SearchResultCardProps> = ({
   price,
   rating = 0,
   id,
+  tags
 }) => {
 
   const totalRating = 5;
@@ -38,7 +41,7 @@ const SearchResultCard: React.FC<SearchResultCardProps> = ({
   };
   return (
     <div
-      className="rounded-lg bg-white flex flex-col md:flex-row gap-6 shadow-sm mb-8 w-full md:w-[900px] max-w-[100%] hover:cursor-pointer"
+      className="rounded-lg bg-white flex flex-col md:flex-row gap-6 shadow-sm mb-8 w-full md:w-[800px] max-w-[100%] hover:cursor-pointer"
       onClick={handleClick}
     >
       <div className="w-full md:w-72 h-52">
@@ -83,10 +86,19 @@ const SearchResultCard: React.FC<SearchResultCardProps> = ({
             <div></div>
           )}
           
-          
-          <div className="text-sm mt-5 text-gray-700 overflow-hidden line-clamp-3 max-h-16">
+          <div className="text-sm my-5 text-gray-700 overflow-hidden line-clamp-3 max-h-16">
             {description}
           </div>
+
+          {
+            tags && tags.map(tag => {
+              return (
+                <span key={tag} className="mr-2 p-1 text-xs mt-5 rounded-full text-white bg-green-900 font-semibold">
+                  {tag}
+                </span>
+              )
+            })
+          }
         </div>
       </div>
     </div>
