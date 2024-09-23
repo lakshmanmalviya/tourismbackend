@@ -12,6 +12,8 @@ import { EntityType } from "@/types/enum/entityType.enum";
 import { useAppDispatch, useAppSelector } from "@/hooks/hook";
 import { RootState } from "@/Redux/store";
 import Pagination from "@/components/common/Pagination";
+import Image from "next/image";
+import DataNotFound from "../assets/data not found.jpeg"
 
 const Heritage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -97,7 +99,7 @@ const Heritage: React.FC = () => {
                 />
               ))
             ) : (
-              <div>No search results found</div>
+              <div><Image src={DataNotFound} alt="result not founnd"/></div>
             )}
           </div>
 
