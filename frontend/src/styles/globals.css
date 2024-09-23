@@ -44,3 +44,48 @@
   -webkit-text-fill-color: transparent;
   animation: shine 3s infinite linear;
 }
+
+
+@keyframes move-up {
+  0% {
+    transform: translateY(10%);
+  }
+  50% {
+    transform: translateY(-10%);
+  }
+  100% {
+    transform: translateY(10%);
+  }
+}
+
+@keyframes move-down {
+  0% {
+    transform: translateY(-10%);
+  }
+  50% {
+    transform: translateY(10%);
+  }
+  100% {
+    transform: translateY(-10%);
+  }
+}
+
+.animate-move-up {
+  animation: move-up 15s ease-in-out infinite;
+}
+
+.animate-move-down {
+  animation: move-down 15s ease-in-out infinite;
+}
+
+@media (min-width: 768px) {
+  .gallery__strip img {
+    height: 200px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .gallery__strip img {
+    height: 300px;
+  }
+}

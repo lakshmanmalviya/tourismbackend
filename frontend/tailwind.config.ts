@@ -37,6 +37,14 @@ const config: Config = {
           "0%": { "clip-path": "polygon(0 0, 100% 0, 100% 0, 0 0)" },
           "100%": { "clip-path": "polygon(0 0, 100% 0, 100% 100%, 0 100%)" },
         },
+        "move-it": {
+          "0%, 90%, 100%": { transform: "translateY(2%)" },
+          "45%": { transform: "translateY(-50%)" },
+        },
+        "move-it-2": {
+          "0%, 90%, 100%": { transform: "translateY(-50%)" },
+          "45%": { transform: "translateY(5%)" },
+        },
         hoverScaleRotate: {
           "0%, 100%": {
             transform: "scale(1) rotate(0deg)",
@@ -59,6 +67,8 @@ const config: Config = {
         },
       },
       animation: {
+        "move-it": "move-it 60s ease alternate infinite 5s",
+        "move-it-2": "move-it-2 65s ease alternate infinite 5s",
         "hover-scale-rotate": "hoverScaleRotate 0.2s ease-in-out",
         "hover-move-button": "hoverMoveButton 0.2s ease-in-out",
         "text-clip": "text-clip 1s cubic-bezier(0.5, 0, 0.1, 1) both",
