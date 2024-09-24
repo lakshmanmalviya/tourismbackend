@@ -3,7 +3,7 @@ import { Place } from 'src/common/dto/place.dto';
 
 export interface HeritageResponseDto extends BaseEntityResponse {
   
-  tags: number[];
+  tags: string[];
   placeId: string;
   place: Place;
 }

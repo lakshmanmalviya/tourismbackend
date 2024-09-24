@@ -34,7 +34,7 @@ export class PlaceController {
     if (query.name) {
       return placesWithImages;
     }
-    console.log(" this is controller of place ", placesWithImages)
+    console.log(' this is controller of place ', placesWithImages);
     return placesWithImages;
   }
 
@@ -57,7 +57,7 @@ export class PlaceController {
     @Body() createPlaceDto: CreatePlaceDto,
     @UploadedFiles()
     files: { images?: Express.Multer.File[]; thumbnail: Express.Multer.File[] },
-  ):Promise<Place> {
+  ): Promise<Place> {
     if (!files.thumbnail) {
       throw new BadRequestException('Thumbnail is required');
     }
@@ -75,7 +75,7 @@ export class PlaceController {
     updatePlaceDto: UpdatePlaceDto,
     @UploadedFiles()
     files: { thumbnail: Express.Multer.File[] },
-  ):Promise<Place> {
+  ): Promise<Place> {
     const updatedPlace = await this.placeService.updatePlace(
       id,
       updatePlaceDto,

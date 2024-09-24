@@ -12,6 +12,7 @@ import { EntityType } from 'src/types/entityType.enum';
 import { PlaceService } from 'src/place/place.service';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { HeritagesResponseDto } from './dto/heritage-response.dto';
+import { GetHeritageDto } from './dto/get-heritage.dto';
 
 @Injectable()
 export class HeritageService {
@@ -39,7 +40,7 @@ export class HeritageService {
     const heritage = this.heritageRepository.create({
       name,
       description,
-      tags: JSON.parse(tags),
+      tags,
       mapUrl,
     });
 
@@ -60,16 +61,77 @@ export class HeritageService {
     return await this.heritageRepository.save(heritage);
   }
 
-  async findAll(
-    paginationDto: PaginationDto,
-  ): Promise<HeritagesResponseDto> {
-    const { page, limit } = paginationDto;
+  // async findAll(
+  //  query: GetHeritageDto
+  // ): Promise<HeritagesResponseDto> {
+  //   const { page, limit , keyword} = query;
+  //   const pageNumber = Math.max(1, page);
+  //   const pageSize = Math.max(1, limit);
+  //   const offset = (pageNumber - 1) * pageSize;
+
+  //   const heritagesResult = await this.datasource.query(
+  //     `SELECT h.*,
+  //         JSON_OBJECT(
+  //           'id', p.id,
+  //           'name', p.name,
+  //           'description', p.description,
+  //           'thumbnailUrl', p.thumbnailUrl
+  //         ) AS place,
+  //         COALESCE(
+  //           JSON_ARRAYAGG(
+  //             JSON_OBJECT('id', img.id, 'link', img.imageLink)
+  //           ), '[]'
+  //         ) AS images
+  //       FROM heritage h
+  //       INNER JOIN place p ON h.placeId = p.id
+  //       LEFT JOIN image img ON img.entityId = h.id
+  //       AND img.entityType = 'HERITAGE'
+  //       AND img.isDeleted = false
+  //       WHERE h.isDeleted = false
+  //       GROUP BY h.id, p.id
+  //       LIMIT ? OFFSET ?`,
+  //     [pageSize, offset],
+  //   );
+
+  //   if (!heritagesResult || heritagesResult.length === 0) {
+  //     throw new NotFoundException(`No heritages found`);
+  //   }
+
+  //   const [totalCountResult] = await this.datasource.query(
+  //     `SELECT COUNT(*) AS totalCount FROM heritage WHERE isDeleted = false`,
+  //   );
+
+  //   const totalCount = parseInt(totalCountResult.totalCount, 10);
+  //   const totalPages = Math.ceil(totalCount / pageSize);
+
+  //   const heritages = heritagesResult.map((heritage: any) => ({
+  //     id: heritage.id,
+  //     name: heritage.name,
+  //     description: heritage.description,
+  //     thumbnailUrl: heritage.thumbnailUrl,
+  //     mapUrl: heritage.mapUrl,
+  //     isDeleted: heritage.isDeleted,
+  //     place: heritage.place,
+  //     images: heritage.images ? JSON.parse(heritage.images) : [],
+  //   }));
+
+  //   return {
+  //     data: heritages,
+  //     totalCount,
+  //     totalPages,
+  //     limit
+  //   };
+  // }
+
+  async findAll(query: GetHeritageDto): Promise<HeritagesResponseDto> {
+    const { page = 1, limit = 5, keyword } = query;
     const pageNumber = Math.max(1, page);
     const pageSize = Math.max(1, limit);
     const offset = (pageNumber - 1) * pageSize;
 
-    const heritagesResult = await this.datasource.query(
-      `SELECT h.*,
+    // SQL query for fetching heritages with JOINs
+    let baseQuery = `
+      SELECT h.*,
           JSON_OBJECT(
             'id', p.id,
             'name', p.name,
@@ -84,43 +146,67 @@ export class HeritageService {
         FROM heritage h
         INNER JOIN place p ON h.placeId = p.id
         LEFT JOIN image img ON img.entityId = h.id
-        AND img.entityType = 'HERITAGE'
-        AND img.isDeleted = false
+                            AND img.entityType = 'HERITAGE'
+                            AND img.isDeleted = false
         WHERE h.isDeleted = false
-        GROUP BY h.id, p.id
-        LIMIT ? OFFSET ?`,
-      [pageSize, offset],
-    );
+    `;
 
-    if (!heritagesResult || heritagesResult.length === 0) {
-      throw new NotFoundException(`No heritages found`);
+    const queryParams: any[] = [];
+
+    // Apply keyword filter if provided
+    if (keyword) {
+        baseQuery += ` AND h.name LIKE ?`;
+        queryParams.push(`%${keyword}%`);
     }
 
-    const [totalCountResult] = await this.datasource.query(
-      `SELECT COUNT(*) AS totalCount FROM heritage WHERE isDeleted = false`,
-    );
+    baseQuery += `
+        GROUP BY h.id, p.id
+        LIMIT ? OFFSET ?
+    `;
 
-    const totalCount = parseInt(totalCountResult.totalCount, 10);
+    queryParams.push(pageSize, offset);
+
+    // Execute the SQL query for fetching data
+    const heritagesResult = await this.datasource.query(baseQuery, queryParams);
+
+    if (!heritagesResult || heritagesResult.length === 0) {
+        throw new NotFoundException(`No heritages found`);
+    }
+
+    // Use TypeORM to count heritages (with optional keyword filter)
+    const countQuery = this.heritageRepository.createQueryBuilder('h')
+        .where('h.isDeleted = false');
+
+    if (keyword) {
+        countQuery.andWhere('h.name LIKE :keyword', { keyword: `%${keyword}%` });
+    }
+
+    // Get the total count using TypeORM
+    const totalCount = await countQuery.getCount();
+
+    // Calculate total pages
     const totalPages = Math.ceil(totalCount / pageSize);
 
+    // Format the results
     const heritages = heritagesResult.map((heritage: any) => ({
-      id: heritage.id,
-      name: heritage.name,
-      description: heritage.description,
-      thumbnailUrl: heritage.thumbnailUrl,
-      mapUrl: heritage.mapUrl,
-      isDeleted: heritage.isDeleted,
-      place: heritage.place,
-      images: heritage.images ? JSON.parse(heritage.images) : [],
+        id: heritage.id,
+        name: heritage.name,
+        description: heritage.description,
+        thumbnailUrl: heritage.thumbnailUrl,
+        mapUrl: heritage.mapUrl,
+        isDeleted: heritage.isDeleted,
+        place: heritage.place,
+        images: heritage.images ? JSON.parse(heritage.images) : [],
     }));
 
     return {
-      data: heritages,
-      totalCount,
-      totalPages,
-      limit
+        data: heritages,
+        totalCount,
+        totalPages,
+        limit: pageSize,
     };
-  }
+}
+
 
   async findOne(id: string): Promise<Heritage> {
     try {
