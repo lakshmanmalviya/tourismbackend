@@ -5,9 +5,7 @@ interface SidebarProps {
   activeItem:string,
   setActiveItem:(activeItem:string) => void
 }
-const Sidebar:React.FC<SidebarProps> = ({activeItem, setActiveItem}) => {
-  const router = useRouter();
-  
+const Sidebar:React.FC<SidebarProps> = ({activeItem, setActiveItem}) => {  
 
   const sidebarItems = [
     { name: "Profile", path: "/dashboard/profile" },
