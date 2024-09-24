@@ -23,7 +23,7 @@ export class Heritage {
   isDeleted: boolean;
 
   @Column('json', { nullable: true })
-  tags: string[];
+  tags: string;
 
   @ManyToOne(() => Place, place => place.heritages)
   @JoinColumn()

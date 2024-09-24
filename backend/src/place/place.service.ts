@@ -4,13 +4,12 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, Like, Repository } from 'typeorm';
 import { Place } from './place.entity';
 import { CreatePlaceDto } from './dto/create-place.dto';
 import { UpdatePlaceDto } from './dto/update-place.dto';
 import { ImageService } from '../image/image.service';
 import { EntityType } from 'src/types/entityType.enum';
-import { PaginationDto } from '../common/dto/pagination.dto';
 import { GetPlaceDto } from './dto/get-place.dto';
 import { PlaceResponseDto, PlacesResponseDto } from './dto/place-response.dto';
 
@@ -59,20 +58,20 @@ export class PlaceService {
   }
 
   async findAll(query: GetPlaceDto): Promise<PlacesResponseDto> {
-    const { page, limit, name } = query;
+    const { page, limit, name, keyword } = query;
     const pageNumber = Math.max(1, page);
     const pageSize = Math.max(1, limit);
     const offset = (pageNumber - 1) * pageSize;
-  
+
     if (name) {
       const placesName = await this.datasource.query(
         `SELECT p.id as id , p.name as name
          FROM place p
-         WHERE p.isDeleted = false`
+         WHERE p.isDeleted = false`,
       );
       return placesName;
     }
-  
+
     const places = await this.datasource.query(
       `SELECT p.*, 
               CONCAT('[', GROUP_CONCAT(
@@ -85,49 +84,32 @@ export class PlaceService {
        AND img.entityType = 'PLACE' 
        AND img.isDeleted = false
        WHERE p.isDeleted = false
+        ${keyword ? `AND p.name LIKE '%${keyword}%'` : ''}
        GROUP BY p.id
        ORDER BY p.id
        LIMIT ? OFFSET ?`,
-      [pageSize, offset]
+      [pageSize, offset],
     );
-  
-    console.log('Place data for limit', limit, "places", places);
-  
-    
-    places.forEach(place => {
-      try {
-        place.images = place.images ? JSON.parse(place.images) : []; 
-      } catch (error) {
-        console.error(`Failed to parse images for place ${place.id}:`, error);
-        place.images = []; 
-      }
+
+    console.log('After mapping', places);
+    const totalCount = await this.placeRepository.count({
+      where: {
+        isDeleted: false,
+        ...(keyword ? { name: Like(`%${keyword}%`) } : {}),
+      },
     });
-  
-    console.log("After mapping", places);
-  
-    const [totalCountResult] = await this.datasource.query(
-      `SELECT COUNT(DISTINCT p.id) as totalCount
-       FROM place p
-       LEFT JOIN image img 
-       ON p.id = img.entityId 
-       AND img.entityType = 'PLACE' 
-       AND img.isDeleted = false`
-    );
-  
-    console.log('Total count', totalCountResult);
-  
-    const totalCount = parseInt(totalCountResult.totalCount, 10);
+
+    console.log('Total count', totalCount);
     const totalPages = Math.ceil(totalCount / pageSize);
-  
+
     return {
-      data: places,  
+      data: places,
       totalCount,
       totalPages,
       limit,
     };
   }
-  
-  
+
   async createPlace(
     createPlaceDto: CreatePlaceDto,
     files: { images?: Express.Multer.File[]; thumbnail: Express.Multer.File[] },
