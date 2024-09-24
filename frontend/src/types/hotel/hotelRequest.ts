@@ -17,6 +17,9 @@ export interface HotelRequest {
 
 export interface HotelFetchQuery extends PaginationRequest {
   ownerId?: string;
+  keyword?: string;
+  sortBy?: string ;
+  sortOrder?: string
 }
 
 export interface UpdateHotelRequest  {
