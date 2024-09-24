@@ -13,6 +13,7 @@
     "@emotion/styled": "^11.13.0",
     "@itseasy21/react-elastic-carousel": "^0.12.3",
     "@mui/material": "^5.16.6",
+    "@nextui-org/react": "^2.4.8",
     "@reduxjs/toolkit": "^2.2.7",
     "axios": "^1.7.4",
     "formik": "^2.4.6",

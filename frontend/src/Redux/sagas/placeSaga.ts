@@ -24,7 +24,7 @@ import { PayloadAction } from '@reduxjs/toolkit';
 import { PlaceApi } from '../api/place/placeApi';
 import { Name, Place, PlacesPayload } from '@/types/place/placePayload';
 
-function* fetchPlacesSaga(action: PayloadAction<PaginationRequest>) {
+function* fetchPlacesSaga(action: PayloadAction<{page?:number, limit?:number, keyword?:string}>) {
   try {
     const response:PlacesPayload = yield call(PlaceApi.fetchPlace, action.payload);
     yield put(fetchPlacesSuccess(response));
@@ -32,10 +32,12 @@ function* fetchPlacesSaga(action: PayloadAction<PaginationRequest>) {
     yield put(fetchPlacesFailure(error.message));
   }
 }
-
+// Worker Sagas
 function* fetchPlaceNameSaga(action: PayloadAction<PlaceRequest>) {
   try {
+    console.log( " this is fecthplace action payload" , action.payload)
     const response: Name[] = yield call(PlaceApi.fetchPlaceName,action.payload);
+    console.log("Response from saga is:", response);
     yield put(fetchPlaceNameSuccess(response));
   } catch (error:any) {
     yield put(fetchPlacesFailure(error.message));
@@ -44,6 +46,7 @@ function* fetchPlaceNameSaga(action: PayloadAction<PlaceRequest>) {
 
 function* fetchPlaceByIdSaga(action: PayloadAction<string>) {
   try {
+    console.log(" this is place id saga " , action.payload)
     const response:Place = yield call(PlaceApi.fetchPlaceById, action.payload);
     yield put(fetchPlaceByIdSuccess(response));
   } catch (error:any) {
@@ -79,6 +82,7 @@ function* deletePlaceSaga(action: PayloadAction<string>) {
   }
 }
 
+// Watcher Sagas
 export function* placeSaga() {
   yield takeLatest(fetchPlacesRequest.type, fetchPlacesSaga);
   yield takeLatest(fetchPlaceNameRequest.type, fetchPlaceNameSaga);

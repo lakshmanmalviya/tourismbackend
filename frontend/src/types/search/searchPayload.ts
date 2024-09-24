@@ -4,7 +4,6 @@ export enum SearchEntityType {
   ALL = "ALL",
   HERITAGE = "HERITAGE",
   HOTEL = "HOTEL",
-  PLACE = "PLACE"
 }
 
 export interface SearchQueryDto {

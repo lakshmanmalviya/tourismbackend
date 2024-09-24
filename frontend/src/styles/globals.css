@@ -14,6 +14,37 @@
   }
 }
 
+@keyframes outer-left {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes inner-left {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes image-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+::-webkit-scrollbar {
+  width: 2px;
+  height: 2px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  box-shadow: inset 0 0 5px grey;
+  border-radius: 5px;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: rgb(94, 156, 94);
+  border-radius: 5px;
+}
 @layer utilities {
   .text-balance {
     text-wrap: balance;
