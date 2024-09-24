@@ -1,19 +1,21 @@
 import Sidebar from "@/components/Dashboard/Sidebar";
-import { useRouter } from "next/router";
+import Router, { useRouter } from "next/router";
 import Profile from "@/components/Dashboard/Profile";
 import Hotel from "@/components/Dashboard/Hotel";
 import Heritage from "@/components/Dashboard/Heritage";
 import Place from "@/components/Dashboard/Place";
-import { SetStateAction, useEffect, useState } from "react";
+import {  useEffect, useState } from "react";
+import { useAppSelector } from "@/hooks/hook";
+import { RootState } from "@/Redux/store";
 
 const DashboardSection = () => {
   const router = useRouter();
   const [activeItem, setActiveItem] = useState<string>("");
+  const { isAuthenticated } = useAppSelector((state: RootState) => state.auth);
 
   useEffect(() => {
     if (router.isReady) {
       const { section } = router.query;
-      console.log("This is section query:", section);
       if (section) {
         setActiveItem(section as string);
       }
@@ -35,14 +37,15 @@ const DashboardSection = () => {
     }
   };
 
+  if (!isAuthenticated) {
+    Router.push("/");
+  }
   return (
     <div className="flex">
-     <div className="hidden md:block">
+      <div className="hidden md:block">
         <Sidebar activeItem={activeItem} setActiveItem={setActiveItem} />
-        </div> 
-      <div className="w-4/5 p-4">
-        {renderComponent()}
       </div>
+      <div className="w-4/5 p-4">{renderComponent()}</div>
     </div>
   );
 };
