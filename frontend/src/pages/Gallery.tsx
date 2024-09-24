@@ -5,6 +5,7 @@ import { RootState } from "../Redux/store";
 import { Name } from "@/types/place/placePayload";
 import { fetchPlaceByIdRequest, fetchPlaceNameRequest } from "@/Redux/slices/placeSlice";
 import Cookies from "js-cookie"; 
+import { Image as ImageType } from "../types/common/image"
 
 export default function Gallery() {
   const dispatch = useAppDispatch();
@@ -91,7 +92,7 @@ export default function Gallery() {
 
       <div className="mx-auto">
         <div className="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
-          {images?.map((image, index) => (
+          {images?.map((image:ImageType, index) => (
             <div
               key={index}
               className="break-inside-avoid cursor-pointer"

@@ -20,6 +20,7 @@ const Navbar = () => {
   const dispatch = useAppDispatch();
 
   const { isAuthenticated } = useAppSelector((state: RootState) => state.auth);
+  const user = useAppSelector((state: RootState) => state.user.user);
   const [open, setOpen] = useState(false);
   const [isRegister, setIsRegister] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -46,8 +47,8 @@ const Navbar = () => {
 
   useEffect(() => {
     dispatch(checkToken());
-    console.log(" checking token....")
-  },[dispatch]);
+    console.log(" checking token....");
+  }, [dispatch]);
 
   const style = {
     position: "absolute" as "absolute",
@@ -69,7 +70,7 @@ const Navbar = () => {
     { href: "/Heritage", label: "Heritage" },
     { href: "/Gallery", label: "Gallery" },
     { href: "/Hotel", label: "Hotels" },
-  ]
+  ];
 
   return (
     <header className="container px-10">
@@ -97,7 +98,7 @@ const Navbar = () => {
 
         <div className="hidden md:flex space-x-4">
           {isAuthenticated ? (
-            <NavbarDropDown/>
+            <NavbarDropDown />
           ) : (
             <Button
               onClick={handleOpen}
@@ -188,15 +189,27 @@ const Navbar = () => {
             </Link>
           ))}
 
-          {isAuthenticated ? (
-            <NavbarDropDown/>
+          {isAuthenticated && user?.role === "ADMIN" ? (
+
+            <>
+              <Link href={"/dashboard/hotel"}>My Hotels</Link>
+              <Link href={"/dashboard/heritage"}>My Heritages</Link>
+              <Link href={"/dashboard/place"}>My Places</Link>
+              <Link href={"/dashboard/profile"}>Profile</Link>
+              <Button
+                onClick={() => dispatch(logout())}
+                className="bg-red-500 text-white px-6 py-2 rounded-full hover:bg-red-600 transition">Logout
+              </Button>
+            </>
           ) : (
-            <Button
-              onClick={handleOpen}
-              className="bg-green-500 text-white px-6 py-2 rounded-full hover:bg-green-600 transition"
-            >
-              Register / Login
-            </Button>
+            <>
+              <Link href={"/dashboard/profile"}>Profile</Link>
+              <Link href={"/dashboard/hotel"}>My Hotels</Link>
+              <Button
+                onClick={() => dispatch(logout())}
+                className="bg-red-500 text-white px-6 py-2 rounded-full hover:bg-red-600 transition">Logout
+              </Button>
+            </>
           )}
         </div>
       )}
