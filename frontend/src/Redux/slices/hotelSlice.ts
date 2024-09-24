@@ -1,6 +1,7 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { HotelsPayload, Hotel } from '@/types/hotel/hotelPayload';
-import { HotelFetchQuery } from '@/types/hotel/hotelRequest';
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { HotelsPayload, Hotel } from "@/types/hotel/hotelPayload";
+import { HotelFetchQuery } from "@/types/hotel/hotelRequest";
+import { PaginationRequest } from "@/types/common/pagination";
 
 interface HotelState {
   hotels: HotelsPayload | null;
@@ -21,10 +22,10 @@ const initialState: HotelState = {
 };
 
 const hotelSlice = createSlice({
-  name: 'hotel',
+  name: "hotel",
   initialState,
   reducers: {
-    fetchHotelsRequest: (state, action : PayloadAction<HotelFetchQuery>) => {
+    fetchHotelsRequest: (state, action: PayloadAction<HotelFetchQuery>) => {
       state.loading = true;
       state.error = null;
       state.success = false;
@@ -39,12 +40,18 @@ const hotelSlice = createSlice({
       state.error = action.payload;
       state.success = false;
     },
-    fetchPendingHotelsRequest: (state) => {
+    fetchPendingHotelsRequest: (
+      state,
+      action: PayloadAction<PaginationRequest>
+    ) => {
       state.loading = true;
       state.error = null;
       state.success = false;
     },
-    fetchPendingHotelsSuccess: (state, action: PayloadAction<HotelsPayload>) => {
+    fetchPendingHotelsSuccess: (
+      state,
+      action: PayloadAction<HotelsPayload>
+    ) => {
       state.loading = false;
       state.pendingHotels = action.payload;
       state.success = true;
@@ -55,8 +62,7 @@ const hotelSlice = createSlice({
       state.success = false;
     },
 
-
-    fetchHotelByIdRequest: (state, action:PayloadAction<string>) => {
+    fetchHotelByIdRequest: (state, action: PayloadAction<string>) => {
       state.error = null;
       state.loading = true;
       state.success = false;
@@ -71,7 +77,7 @@ const hotelSlice = createSlice({
       state.error = action.payload;
       state.success = false;
     },
-    createHotelRequest: (state,action:PayloadAction<FormData>) => {
+    createHotelRequest: (state, action: PayloadAction<FormData>) => {
       state.loading = true;
       state.success = false;
     },
@@ -85,14 +91,19 @@ const hotelSlice = createSlice({
       state.success = false;
     },
 
-    updateHotelRequest: (state, action:PayloadAction<{data: FormData, id: string}>) => {
+    updateHotelRequest: (
+      state,
+      action: PayloadAction<{ data: FormData; id: string }>
+    ) => {
       state.loading = true;
       state.success = false;
     },
     updateHotelSuccess: (state, action: PayloadAction<Hotel>) => {
       state.loading = false;
-      if(state.hotels) {
-        const index = state.hotels.data.findIndex(hotel => hotel.id === action.payload.id);
+      if (state.hotels) {
+        const index = state.hotels.data.findIndex(
+          (hotel) => hotel.id === action.payload.id
+        );
         if (index !== -1) {
           state.hotels.data[index] = action.payload;
         }
@@ -104,17 +115,22 @@ const hotelSlice = createSlice({
       state.error = action.payload;
       state.success = false;
     },
-
-    updateHotelStatusRequest: (state) => {
+    updateHotelStatusRequest: (
+      state,
+      action: PayloadAction<{ id: string; status: string }>
+    ) => {
       state.loading = true;
       state.success = false;
     },
     updateHotelStatusSuccess: (state, action: PayloadAction<Hotel>) => {
       state.loading = false;
-      if(state.hotels) {
-        const index = state.hotels.data.findIndex(hotel => hotel.id === action.payload.id);
+      if (state.hotels) {
+        const index = state.hotels.data.findIndex(
+          (hotel) => hotel.id === action.payload.id
+        );
         if (index !== -1) {
-          state.hotels.data[index].registrationStatus = action.payload.registrationStatus;
+          state.hotels.data[index].registrationStatus =
+            action.payload.registrationStatus;
         }
       }
       state.success = true;
@@ -125,14 +141,16 @@ const hotelSlice = createSlice({
       state.success = false;
     },
 
-    softDeleteHotelRequest: (state, action:PayloadAction<string>) => {
+    softDeleteHotelRequest: (state, action: PayloadAction<string>) => {
       state.loading = true;
       state.success = false;
     },
     softDeleteHotelSuccess: (state, action: PayloadAction<string>) => {
       state.loading = false;
-      if(state.hotels)
-        state.hotels.data = state.hotels.data.filter(hotel => hotel.id !== action.payload) || null;
+      if (state.hotels)
+        state.hotels.data =
+          state.hotels.data.filter((hotel) => hotel.id !== action.payload) ||
+          null;
       state.success = true;
     },
     softDeleteHotelFailure: (state, action: PayloadAction<string>) => {
