@@ -190,20 +190,24 @@ const Navbar = () => {
           ))}
 
           {isAuthenticated && user?.role === "ADMIN" ? (
+
             <>
               <Link href={"/dashboard/hotel"}>My Hotels</Link>
               <Link href={"/dashboard/heritage"}>My Heritages</Link>
               <Link href={"/dashboard/place"}>My Places</Link>
+              <Link href={"/dashboard/profile"}>Profile</Link>
+              <Button
+                onClick={() => dispatch(logout())}
+                className="bg-red-500 text-white px-6 py-2 rounded-full hover:bg-red-600 transition">Logout
+              </Button>
             </>
           ) : (
             <>
               <Link href={"/dashboard/profile"}>Profile</Link>
               <Link href={"/dashboard/hotel"}>My Hotels</Link>
               <Button
-                onClick={handleOpen}
-                className="bg-green-500 text-white px-6 py-2 rounded-full hover:bg-green-600 transition"
-              >
-                Register / Login
+                onClick={() => dispatch(logout())}
+                className="bg-red-500 text-white px-6 py-2 rounded-full hover:bg-red-600 transition">Logout
               </Button>
             </>
           )}
