@@ -42,7 +42,7 @@ const TopPlaceSlider: React.FC = () => {
     router.push(`/places/${id}`);
   }
   useEffect(() => {
-    dispatch(fetchPlacesRequest());
+    dispatch(fetchPlacesRequest({page: 1, limit: 5}));
   }, [dispatch]);
 
   return (

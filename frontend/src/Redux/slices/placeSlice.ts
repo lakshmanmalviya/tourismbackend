@@ -1,7 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { PlacesPayload, Place, Name } from '@/types/place/placePayload';
 import { PlaceRequest} from '@/types/place/placeRequest';
-
 interface PlaceState {
   places: PlacesPayload | null;
   place: Place | null;
@@ -24,7 +23,7 @@ const placeSlice = createSlice({
   name: 'place',
   initialState,
   reducers: {
-    fetchPlacesRequest(state) {
+    fetchPlacesRequest(state, action:PayloadAction<{page?:number, limit?:number , keyword?:string}>) {
       state.loading = true;
       state.error = null;
       state.success = false;
@@ -109,7 +108,7 @@ const placeSlice = createSlice({
       state.success = false;
     },
 
-    deletePlaceRequest(state) {
+    deletePlaceRequest(state, action: PayloadAction<string>) {
       state.loading = true;
       state.error = null;
       state.success = false;

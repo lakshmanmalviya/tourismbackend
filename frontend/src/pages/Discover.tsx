@@ -8,6 +8,7 @@ import { RootState } from "../Redux/store";
 import Pagination from "@/components/common/Pagination";
 import { useRouter } from "next/router";
 import DataNotFound from '../assets/data not found.jpeg'
+import Cookies from "js-cookie";
 import Image
  from "next/image";
 const SearchAll: React.FC = () => {
@@ -35,8 +36,11 @@ const router = useRouter()
     [dispatch]
   );
 
-  useEffect(() => {
-    dispatch(searchRequest({keyword: "j",entityType: SearchEntityType.ALL,page: 1,limit:5}))
+  useEffect(()=> {
+    const location = Cookies.get("userLocation");
+    if (location) {
+      dispatch(searchRequest({keyword: location, entityType: SearchEntityType.ALL,page: 1,limit:5}))
+    }
   },[])
 
   useEffect(() => {
