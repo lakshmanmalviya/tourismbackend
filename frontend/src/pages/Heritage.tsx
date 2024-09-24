@@ -50,7 +50,7 @@ const Heritage: React.FC = () => {
   useEffect(() => {
     dispatch(
       searchRequest({
-        keyword: "j",
+        keyword: "",
         entityType: SearchEntityType.HERITAGE,
         page: 1,
         limit: 5,

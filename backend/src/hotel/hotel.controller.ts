@@ -83,13 +83,14 @@ export class HotelController {
     @UploadedFiles()
     files: { images?: Express.Multer.File[]; thumbnail: Express.Multer.File[] },
   ):Promise<Hotel> {
+    console.log("Entered hotels");
     if (!files.thumbnail) {
       throw new BadRequestException('thumbnail is required');
     }
 
     const transformedDto = plainToInstance(CreateHotelDto, createHotelDto);
     await validateOrReject(transformedDto);
-
+    console.log("Passed all validations");
     const hotel = await this.hotelService.create(transformedDto, files);
     return hotel;
   }

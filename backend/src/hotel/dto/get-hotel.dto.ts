@@ -1,5 +1,5 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { IsNumber, IsOptional, Min } from 'class-validator';
+import { IsNumber, IsOptional, IsString, Min } from 'class-validator';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 export class GetHotelDto {
@@ -15,4 +15,13 @@ export class GetHotelDto {
     @IsNumber()
     @Min(1)
     limit?: number;
+
+    @IsString()
+    sortBy?: "price" | "hotelStarRating" | "name";
+
+    @IsOptional()
+    sortOrder?: "ASC" | "DESC";
+
+    @IsString()
+    keyword?: string;
 }

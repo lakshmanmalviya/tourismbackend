@@ -23,29 +23,31 @@ import { AuthGuard } from '../auth/auth.guard';
 import { RolesGuard } from '../role/role.guard';
 import { Roles } from '../role/roles.decorator';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
-// import { HeritageResponsesDto } from './dto/heritage-response.dto';
-// import { HeritageDto } from './dto/heritage-response.dto';
-import { HeritagesResponseDto, HeritageResponseDto } from './dto/heritage-response.dto';
+import {
+  HeritagesResponseDto,
+  HeritageResponseDto,
+} from './dto/heritage-response.dto';
 import { Heritage } from './heritage.entity';
+import { GetHeritageDto } from './dto/get-heritage.dto';
 @Controller('heritages')
 export class HeritageController {
   constructor(private readonly heritageService: HeritageService) {}
 
   @Get()
-  async findAll(@Query() query: PaginationDto):Promise<HeritagesResponseDto> {
+  async findAll(@Query() query: GetHeritageDto): Promise<HeritagesResponseDto> {
     const { page = 1, limit = 5 } = query;
     const { data, totalCount, totalPages } =
       await this.heritageService.findAll(query);
     return {
-        data,
-        totalCount,
-        totalPages,
-        limit
+      data,
+      totalCount,
+      totalPages,
+      limit,
     };
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string):Promise<Heritage> {
+  async findOne(@Param('id') id: string): Promise<Heritage> {
     const heritage = await this.heritageService.findOne(id);
     return heritage;
   }
@@ -63,7 +65,7 @@ export class HeritageController {
     @Body() createHeritageDto: CreateHeritageDto,
     @UploadedFiles()
     files: { images?: Express.Multer.File[]; thumbnail: Express.Multer.File[] },
-  ):Promise<Heritage> {
+  ): Promise<Heritage> {
     if (!files.thumbnail) {
       throw new BadRequestException('Thumbnail is required');
     }
@@ -83,7 +85,7 @@ export class HeritageController {
     @Param('id') id: string,
     @Body() updateHeritageDto: UpdateHeritageDto,
     @UploadedFiles() thumbnail?: Express.Multer.File[],
-  ):Promise<Heritage> {
+  ): Promise<Heritage> {
     const heritage = await this.heritageService.update(
       id,
       updateHeritageDto,

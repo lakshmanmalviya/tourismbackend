@@ -31,8 +31,96 @@ export class HotelService {
     @InjectDataSource() private readonly datasource: DataSource,
   ) {}
 
+  // async findAll(queryParam: GetHotelDto): Promise<HotelsResponseDto> {
+  //   const { page = 1, limit = 5, ownerId, sortBy = "Name", sortOrder = "DESC"} = queryParam;
+  //   const pageNumber = page;
+  //   const pageSize = limit;
+  //   const offset = (pageNumber - 1) * pageSize;
+
+  //   let baseQuery = `
+  //   SELECT h.*,
+  //          JSON_OBJECT(
+  //            'id', p.id,
+  //            'name', p.name,
+  //            'description', p.description
+  //          ) AS place,
+  //          JSON_OBJECT(
+  //            'id', u.id,
+  //            'name', u.username,
+  //            'email', u.email,
+  //            'role', u.role
+  //          ) AS owner,
+  //          COALESCE(
+  //            JSON_ARRAYAGG(
+  //              JSON_OBJECT('id', img.id, 'link', img.imageLink)
+  //            ), '[]'
+  //          ) AS images
+  //   FROM hotel h
+  //   LEFT JOIN place p ON h.placeId = p.id
+  //   LEFT JOIN user u ON h.ownerId = u.id
+  //   LEFT JOIN image img ON img.entityId = h.id
+  //                      AND img.entityType = 'HOTEL'
+  //                      AND img.isDeleted = false
+  //   WHERE h.isDeleted = false
+  // `;
+
+  //   if (ownerId) {
+  //     baseQuery += ` AND h.ownerId = ? `;
+  //   }
+
+  //   baseQuery += `
+  //   GROUP BY h.id, p.id, u.id
+  //   ORDER BY h.id
+  //   LIMIT ? OFFSET ?
+  // `;
+
+  //   try {
+  //     const queryParams = ownerId
+  //       ? [ownerId, pageSize, offset]
+  //       : [pageSize, offset];
+
+  //     const hotels = await this.datasource.query(baseQuery, queryParams);
+
+  //     let countQuery = `SELECT COUNT(*) AS totalCount FROM hotel WHERE isDeleted = false`;
+  //     const countParams = [];
+  //     if (ownerId) {
+  //       countQuery += ` AND ownerId = ?`;
+  //       countParams.push(ownerId);
+  //     }
+
+  //     const [totalCountResult] = await this.datasource.query(
+  //       countQuery,
+  //       countParams,
+  //     );
+
+  //     const totalCount = parseInt(totalCountResult.totalCount, 10);
+  //     const totalPages = Math.ceil(totalCount / pageSize);
+
+  //     const formattedHotels = hotels.map((hotel: any) => ({
+  //       ...hotel,
+  //       images: hotel.images ? JSON.parse(hotel.images) : [],
+  //     }));
+
+  //     return {
+  //       data: formattedHotels,
+  //       totalCount,
+  //       totalPages,
+  //       limit,
+  //     };
+  //   } catch (error) {
+  //     console.error('Error in findAll:', error);
+  //   }
+  // }
+
   async findAll(queryParam: GetHotelDto): Promise<HotelsResponseDto> {
-    const { page = 1, limit = 5, ownerId } = queryParam;
+    const {
+      page = 1,
+      limit = 5,
+      ownerId,
+      sortBy = 'Name',
+      sortOrder = 'DESC',
+      keyword,
+    } = queryParam;
     const pageNumber = page;
     const pageSize = limit;
     const offset = (pageNumber - 1) * pageSize;
@@ -64,38 +152,67 @@ export class HotelService {
     WHERE h.isDeleted = false
   `;
 
+    const queryParams: any[] = [];
+
     if (ownerId) {
       baseQuery += ` AND h.ownerId = ? `;
+      queryParams.push(ownerId);
     }
 
-    baseQuery += `
-    GROUP BY h.id, p.id, u.id
-    ORDER BY h.id
-    LIMIT ? OFFSET ?
-  `;
+    if (keyword) {
+      baseQuery += ` AND h.name LIKE ? `;
+      queryParams.push(`%${keyword}%`);
+    }
+    baseQuery += ` GROUP BY h.id, p.id, u.id `;
+
+    const sortingCriteria = [];
+    const validSortByFields = ['name', 'hotelStarRating', 'price'];
+
+    if (Array.isArray(sortBy)) {
+      for (const field of sortBy) {
+        if (validSortByFields.includes(field)) {
+          sortingCriteria.push(`h.${field.toLowerCase()} ${sortOrder}`);
+        }
+      }
+    } else if (validSortByFields.includes(sortBy)) {
+      sortingCriteria.push(`h.${sortBy} ${sortOrder}`);
+    }
+
+    if (sortingCriteria.length > 0) {
+      baseQuery += ` ORDER BY ${sortingCriteria.join(', ')}`;
+    } else {
+      baseQuery += ` ORDER BY h.id ${sortOrder}`;
+    }
+
+    baseQuery += ` LIMIT ? OFFSET ?`;
+    queryParams.push(pageSize, offset);
 
     try {
-      const queryParams = ownerId
-        ? [ownerId, pageSize, offset]
-        : [pageSize, offset];
-
+      // Fetch hotels using raw SQL
       const hotels = await this.datasource.query(baseQuery, queryParams);
 
-      let countQuery = `SELECT COUNT(*) AS totalCount FROM hotel WHERE isDeleted = false`;
-      const countParams = [];
+      // Use TypeORM to count hotels, avoiding unnecessary joins
+      const countQuery = this.hotelRepository
+        .createQueryBuilder('h')
+        .where('h.isDeleted = false');
+
+      // Apply filters to the count query
       if (ownerId) {
-        countQuery += ` AND ownerId = ?`;
-        countParams.push(ownerId);
+        countQuery.andWhere('h.ownerId = :ownerId', { ownerId });
+      }
+      if (keyword) {
+        countQuery.andWhere('h.name LIKE :keyword', {
+          keyword: `%${keyword}%`,
+        });
       }
 
-      const [totalCountResult] = await this.datasource.query(
-        countQuery,
-        countParams,
-      );
+      // Fetch the total count of hotels matching the filters
+      const totalCount = await countQuery.getCount();
 
-      const totalCount = parseInt(totalCountResult.totalCount, 10);
+      // Calculate total pages
       const totalPages = Math.ceil(totalCount / pageSize);
 
+      // Parse JSON image data if necessary
       const formattedHotels = hotels.map((hotel: any) => ({
         ...hotel,
         images: hotel.images ? JSON.parse(hotel.images) : [],
@@ -105,10 +222,11 @@ export class HotelService {
         data: formattedHotels,
         totalCount,
         totalPages,
-        limit,
+        limit: pageSize,
       };
     } catch (error) {
       console.error('Error in findAll:', error);
+      throw new Error('Error fetching hotels');
     }
   }
 
@@ -155,9 +273,7 @@ export class HotelService {
     };
   }
 
-  async findPending(
-    paginationDto: PaginationDto,
-  ): Promise<HotelsResponseDto> {
+  async findPending(paginationDto: PaginationDto): Promise<HotelsResponseDto> {
     const { page, limit } = paginationDto;
     const pageNumber = Math.max(1, page);
     const pageSize = Math.max(1, limit);
@@ -211,7 +327,7 @@ export class HotelService {
       return {
         data: formattedHotels,
         totalCount: total,
-        totalPages: pageNumber,
+        totalPages: Math.ceil(total/limit),
         limit: pageSize,
       };
     } catch (error) {
@@ -259,7 +375,7 @@ export class HotelService {
       mapUrl,
       contact,
     });
-
+    console.log('Hotel created: ', hotel);
     if (user.role === 'ADMIN') {
       hotel.registrationStatus = RegistrationStatus.ACCEPTED;
     } else hotel.registrationStatus = RegistrationStatus.PENDING;
@@ -271,7 +387,7 @@ export class HotelService {
       EntityType.HOTEL,
       thumbnail,
     );
-
+    console.log('Thumbnail saved: ', hotel.thumbnailUrl);
     this.imageService.handleImagesUpload(
       savedHotel.id,
       EntityType.HOTEL,
