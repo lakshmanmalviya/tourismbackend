@@ -10,6 +10,7 @@ export class CreateHeritageDto {
   description: string;
 
   @IsString()
+  @IsOptional()
   tags: string;
   
   @IsString()

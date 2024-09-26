@@ -25,9 +25,11 @@ const Hotel: React.FC = () => {
     sortBy: undefined,
   });
   const [reset, setReset] = useState(false);
+
   useEffect(() => {
     dispatch(searchRequest({entityType: SearchEntityType.HOTEL,page: 1,limit:5, hotelStarRating:5}))
   },[])
+  
   const handleSearch = useCallback(
     (searchTerm: string, entityType: SearchEntityType, page = 1) => {
       dispatch(

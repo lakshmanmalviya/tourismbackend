@@ -11,12 +11,12 @@ const SearchBar: React.FC<SearchBarProps> = ({ searchType, onSearch }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.name === '')
+      onSearch("",searchType);
     setSearchTerm(event.target.value);
   };
 
   const handleSearch = () => {
-
-    console.log(" the search button is pressed", searchTerm)
     if (searchTerm.trim()) {
       onSearch(searchTerm, searchType);
     }

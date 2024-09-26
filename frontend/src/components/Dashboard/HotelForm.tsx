@@ -64,6 +64,7 @@ export const HotelForm: React.FC<HotelFormProps> = ({
 
   useEffect(() => {
     if ((isEdit && id) || (isView && id)) {
+        console.log(" this is hotel " , id)
       dispatch(fetchHotelByIdRequest(id));
     }
   }, [dispatch, isEdit, id, isView]);
@@ -189,9 +190,15 @@ export const HotelForm: React.FC<HotelFormProps> = ({
                 <span className="font-bold text-xl ">Price: </span>
                 <h2 className="text-sm">{hotel?.price}</h2>
               </div>
+              <div>
+                <span className="font-bold text-xl ">Star Rating: </span>
+                <h2 className="text-sm">{hotel?.hotelStarRating}</h2>
+              </div>
 
-              <p>Star Rating: {hotel?.hotelStarRating}</p>
-              {hotel?.hotelStarRating && <p>Contact: {formData.contact}</p>}
+              {hotel?.contact &&  <div>
+                <span className="font-bold text-xl ">Contact: </span>
+                <h2 className="text-sm">{hotel?.contact}</h2>
+              </div>}
 
               <div className="mt-4">
                 <h4>Thumbnail:</h4>
@@ -207,7 +214,7 @@ export const HotelForm: React.FC<HotelFormProps> = ({
               <div className="mt-4">
                 <h4>Images:</h4>
                 <div className="grid grid-cols-2 gap-2">
-                  {hotel?.images.map((image, index) => (
+                  {hotel?.images.map((image:Image, index) => (
                     <img
                       key={index}
                       src={image.link}

@@ -16,7 +16,7 @@ import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { PlaceService } from './place.service';
 import { CreatePlaceDto } from './dto/create-place.dto';
 import { UpdatePlaceDto } from './dto/update-place.dto';
-import { AuthGuard } from '../auth/auth.guard';
+import { AuthGuard } from 'src/auth/auth.guard';
 import { RolesGuard } from '../role/role.guard';
 import { Roles } from '../role/roles.decorator';
 import { GetPlaceDto } from './dto/get-place.dto';

@@ -4,7 +4,6 @@ import { FaCircle, FaRegCircle } from "react-icons/fa6";
 import { TbReceiptRupee } from "react-icons/tb";
 import { EntityType } from "@/types/enum/entityType.enum";
 import { SearchEntityType } from "@/types/search/searchPayload";
-
 interface SearchResultCardProps {
   name: string;
   description: string;

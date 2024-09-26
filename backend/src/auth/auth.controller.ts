@@ -16,7 +16,6 @@ export class AuthController {
     @Body() registerDto: RegisterDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<authResponse> {
-    // try {
       const { accessToken, refreshToken, id } =
         await this.authService.register(registerDto);
 
@@ -24,10 +23,6 @@ export class AuthController {
       res.status(HttpStatus.CREATED);
 
       return {id };
-    // } catch (error) {
-    //   res.status(error.status);
-    //   return error.response;
-    // }
   }
 
   @Post('login')

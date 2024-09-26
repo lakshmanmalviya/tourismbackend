@@ -7,9 +7,10 @@ import { Tag } from "@/types/tag/tag";
 
 interface HeritageFilterProps {
   onApplyFilters: (placeId: string, selectedTags: string) => void;
+  reset: boolean;
 }
 
-const HeritageFilter: React.FC<HeritageFilterProps> = ({ onApplyFilters }) => {
+const HeritageFilter: React.FC<HeritageFilterProps> = ({ onApplyFilters, reset }) => {
   const dispatch = useAppDispatch();
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedPlaceId, setSelectedPlaceId] = useState<string>("");
@@ -17,12 +18,18 @@ const HeritageFilter: React.FC<HeritageFilterProps> = ({ onApplyFilters }) => {
   const tagsResponse = useAppSelector((state:RootState) => state.tag.tags)
 
   useEffect(() => {
+    console.log(" use effect of filter is called in reset change " , reset)
+    if (reset) {
+      setSelectedPlaceId("")
+      setSelectedTags([]);
+    }
+  },[reset])
+
+  useEffect(() => {
     dispatch(fetchTagsRequest());
-    
   }, [dispatch])
 
   useEffect(() => {
-    console.log(tagsResponse)
     if (tagsResponse) {
       setTags(tagsResponse);
     }
@@ -37,9 +44,11 @@ const HeritageFilter: React.FC<HeritageFilterProps> = ({ onApplyFilters }) => {
   };
 
   const handleApplyFilters = () => {
-    if (selectedPlaceId) {
-        onApplyFilters(selectedPlaceId, selectedTags.join(","));
-    }
+    // if (selectedPlaceId) {
+    //     onApplyFilters(selectedPlaceId, selectedTags.join(","));
+    // }
+  console.log(" selected TAgs" , selectedTags);
+    onApplyFilters(selectedPlaceId, selectedTags.join(","));
   };
 
   return (

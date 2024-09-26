@@ -4,14 +4,13 @@ import Profile from "@/components/Dashboard/Profile";
 import Hotel from "@/components/Dashboard/Hotel";
 import Heritage from "@/components/Dashboard/Heritage";
 import Place from "@/components/Dashboard/Place";
-import {  useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useAppSelector } from "@/hooks/hook";
 import { RootState } from "@/Redux/store";
-
 const DashboardSection = () => {
   const router = useRouter();
   const [activeItem, setActiveItem] = useState<string>("");
-  const { isAuthenticated } = useAppSelector((state: RootState) => state.auth);
+  const user = useAppSelector((state: RootState) => state.user.user);
 
   useEffect(() => {
     if (router.isReady) {
@@ -29,23 +28,20 @@ const DashboardSection = () => {
       case "hotel":
         return <Hotel />;
       case "heritage":
-        return <Heritage />;
+        return ( user?.role === 'ADMIN' && <Heritage />);
       case "place":
-        return <Place />;
+        return ( user?.role === 'ADMIN' && <Place/>);
       default:
         return <Profile />;
     }
   };
 
-  if (!isAuthenticated) {
-    Router.push("/");
-  }
   return (
-    <div className="flex">
+    <div className="flex justify-between">
       <div className="hidden md:block">
         <Sidebar activeItem={activeItem} setActiveItem={setActiveItem} />
       </div>
-      <div className="w-4/5 p-4">{renderComponent()}</div>
+      <div className="mx-auto p-4">{renderComponent()}</div>
     </div>
   );
 };

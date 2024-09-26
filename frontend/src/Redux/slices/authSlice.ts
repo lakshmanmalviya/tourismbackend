@@ -25,15 +25,12 @@ const authSlice = createSlice({
       state.error = action.payload;
     },
     registerStart(state, action: PayloadAction<registerPayload>) {
-      console.log("registration started")
-      console.log("registerStart action dispatched with payload:", action.payload);
       state.loading = true;
       state.error = null;
     },
     registerSuccess(state) {
       state.loading = false;
       state.isAuthenticated = true;
-      console.log("register successful")
     },
     registerFailure(state, action: PayloadAction<string>) {
       state.loading = false;
@@ -42,8 +39,16 @@ const authSlice = createSlice({
     logout(state) {
       state.isAuthenticated = false;
     },
+    refreshTokenRequest(state){
+      state.isAuthenticated = false;
+      state.error = null;
+    },
     refreshTokenSuccess(state) {
       state.isAuthenticated = true;
+    },
+    refreshTokenFailure(state,action : PayloadAction<string>) {
+      state.isAuthenticated = false;
+      state.error= action.payload
     },
     checkToken(state) {
       const token = Cookies.get('refreshToken'); 
@@ -64,8 +69,10 @@ export const {
   registerSuccess,
   registerFailure,
   logout,
-  checkToken,
+  refreshTokenRequest,
+  refreshTokenFailure,
   refreshTokenSuccess,
+  checkToken,
 } = authSlice.actions;
 
 export default authSlice.reducer;

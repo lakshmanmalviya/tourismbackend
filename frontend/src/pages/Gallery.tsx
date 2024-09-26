@@ -77,7 +77,7 @@ export default function Gallery() {
         />
       </div>
 
-      <div className="flex gap-4 m-4 overflow-auto"> 
+      <div className="flex gap-4 m-4 p-4 overflow-auto"> 
         {filteredNames?.map((name: Name) => (
           <button
             key={name.id}

@@ -56,7 +56,10 @@ const Hotel = () => {
   const [edit, setEdit] = useState(false);
   const [selectedHotelId, setSelectedHotelId] = useState("");
   // const [page, setPage] = useState<number>(1);
-  const [paginationData, setPaginationData] = useState({current: 1, totalPage:1});
+  const [paginationData, setPaginationData] = useState({
+    current: 1,
+    totalPage: 1,
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [searchKeyword, setSearchKeyword] = useState<string>("");
@@ -66,31 +69,24 @@ const Hotel = () => {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   // const [isAccept]
   const [updatePendingStatus, setUpdatePendingStatus] = useState<string>("");
-  const [selectedPendingHotelId, setSelectedPendingHotelId] = useState<string>();
+  const [selectedPendingHotelId, setSelectedPendingHotelId] =
+    useState<string>();
   const [pendingHotelsData, setPendingHotelsData] = useState<HotelType[]>([]);
-const [isUpdateStatusModalOpen, setIsUpdateStatusModalOpen] = useState<boolean> (false);
-  // useEffect(() => {
-  //   dispatch(
-  //     fetchHotelsRequest({
-  //       page: paginationData.current,
-  //       ownerId: user?.id,
-  //       keyword: searchKeyword,
-  //       sortBy: sortBy,
-  //       sortOrder,
-  //     })
-  //   );
-  // }, [dispatch, paginationData, searchKeyword, sortBy, sortOrder, user?.id]);
+  const [isUpdateStatusModalOpen, setIsUpdateStatusModalOpen] =
+    useState<boolean>(false);
+
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedTab])
+  }, [selectedTab]);
 
   useEffect(() => {
     if (selectedTab === "approve") {
-      dispatch(fetchPendingHotelsRequest({
-        page: currentPage
-      }));    
-    }
-    else {
+      dispatch(
+        fetchPendingHotelsRequest({
+          page: currentPage,
+        })
+      );
+    } else {
       dispatch(
         fetchHotelsRequest({
           page: currentPage,
@@ -101,28 +97,29 @@ const [isUpdateStatusModalOpen, setIsUpdateStatusModalOpen] = useState<boolean> 
         })
       );
     }
-  }, [selectedTab, dispatch, searchKeyword, sortBy, sortOrder, user?.id, currentPage]);
+  }, [
+    selectedTab,
+    dispatch,
+    searchKeyword,
+    sortBy,
+    sortOrder,
+    user?.id,
+    currentPage,
+  ]);
 
   useEffect(() => {
     if (hotels) {
       setData(hotels.data);
-      // setPaginationData({current: 1, totalPage: hotels.totalPages})
       setTotalPages(hotels.totalPages);
     }
   }, [hotels]);
-  
+
   useEffect(() => {
     if (pendingHotels) {
       setPendingHotelsData(pendingHotels.data);
       setTotalPages(pendingHotels.totalPages);
-      // setTotalPages({current: 1, totalPage: pendingHotels.totalPages});
     }
   }, [pendingHotels]);
-
-
-  if (!user) {
-    Router.push("/")
-  }
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
@@ -130,8 +127,8 @@ const [isUpdateStatusModalOpen, setIsUpdateStatusModalOpen] = useState<boolean> 
   const closeUpdateStatusModal = () => setIsUpdateStatusModalOpen(false);
   const handlePageChange = (page: number) => {
     console.log("Pagination page changed: ", page);
-    setCurrentPage(page)
-  }
+    setCurrentPage(page);
+  };
 
   const handleSortBySelection = (key: Selection) => {
     const selectedValue = Array.from(key).join("");
@@ -161,7 +158,7 @@ const [isUpdateStatusModalOpen, setIsUpdateStatusModalOpen] = useState<boolean> 
   const closeViewModal = () => {
     setIsViewModalOpen(false);
   };
-  // Handle deletion of hotel
+
   const handleDeleteHotel = () => {
     if (selectedHotelId) {
       dispatch(softDeleteHotelRequest(selectedHotelId));
@@ -171,16 +168,23 @@ const [isUpdateStatusModalOpen, setIsUpdateStatusModalOpen] = useState<boolean> 
   };
 
   const handleUpdateHotelStatus = () => {
-    dispatch(updateHotelStatusRequest({id: selectedHotelId, status: updatePendingStatus}));
+    dispatch(
+      updateHotelStatusRequest({
+        id: selectedPendingHotelId ?? "",
+        status: updatePendingStatus,
+      })
+    );
     closeUpdateStatusModal();
-  }
+  };
 
   return (
     <div className="">
       <Tabs
         aria-label="Options"
         selectedKey={selectedTab}
-        onSelectionChange={(key) =>{setSelectedTab(key as string)}}
+        onSelectionChange={(key) => {
+          setSelectedTab(key as string);
+        }}
       >
         <Tab key="hotel" title="Hotel">
           <div className="flex flex-col gap-4">
@@ -242,6 +246,7 @@ const [isUpdateStatusModalOpen, setIsUpdateStatusModalOpen] = useState<boolean> 
                 endContent={<PlusIcon />}
                 onClick={() => {
                   setEdit(false);
+                  setIsViewModalOpen(false);
                   openModal();
                 }}
               >
@@ -275,7 +280,10 @@ const [isUpdateStatusModalOpen, setIsUpdateStatusModalOpen] = useState<boolean> 
                           <span
                             className="text-lg text-default-400 cursor-pointer active:opacity-50"
                             onClick={() => {
-                              openViewModal(), setSelectedHotelId(hotel.id);
+                              openModal(),
+                                setSelectedHotelId(hotel.id),
+                                setIsModalOpen(true),
+                                setEdit(false);
                             }}
                           >
                             <EyeIcon />
@@ -336,7 +344,9 @@ const [isUpdateStatusModalOpen, setIsUpdateStatusModalOpen] = useState<boolean> 
                           <span
                             className="text-lg text-default-400 cursor-pointer active:opacity-50"
                             onClick={() => {
-                              openViewModal(), setSelectedHotelId(hotel.id);
+                              openViewModal(),
+                                setSelectedHotelId(hotel.id),
+                                setIsModalOpen(true);
                             }}
                           >
                             <EyeIcon />
@@ -401,8 +411,9 @@ const [isUpdateStatusModalOpen, setIsUpdateStatusModalOpen] = useState<boolean> 
                           <span
                             className="text-lg text-default-400 cursor-pointer active:opacity-50"
                             onClick={() => {
-                              
-                              setSelectedPendingHotelId(hotel.id);
+                              openViewModal(),
+                                setIsViewModalOpen(true),
+                                setSelectedPendingHotelId(hotel.id);
                             }}
                           >
                             <EyeIcon />
@@ -413,10 +424,10 @@ const [isUpdateStatusModalOpen, setIsUpdateStatusModalOpen] = useState<boolean> 
                             className="text-lg text-danger cursor-pointer active:opacity-50"
                             onClick={() => {
                               openUpdateStatusModal(),
-                              setUpdatePendingStatus("REJECTED")
+                                setUpdatePendingStatus("REJECTED");
                               setSelectedPendingHotelId(hotel.id);
                             }}
-                            >
+                          >
                             <Cross />
                           </span>
                         </Tooltip>
@@ -424,8 +435,8 @@ const [isUpdateStatusModalOpen, setIsUpdateStatusModalOpen] = useState<boolean> 
                           <span
                             className="text-lg text-success cursor-pointer active:opacity-50"
                             onClick={() => {
-                              openUpdateStatusModal()
-                              setUpdatePendingStatus("ACCEPTED")
+                              openUpdateStatusModal();
+                              setUpdatePendingStatus("ACCEPTED");
                               setSelectedPendingHotelId(hotel.id);
                             }}
                           >
@@ -441,8 +452,7 @@ const [isUpdateStatusModalOpen, setIsUpdateStatusModalOpen] = useState<boolean> 
           </Tab>
         )}
       </Tabs>
-
-      {isModalOpen && (
+      {isModalOpen && edit  ? (
         <HotelForm
           isModalOpen={isModalOpen}
           closeModal={closeModal}
@@ -450,8 +460,15 @@ const [isUpdateStatusModalOpen, setIsUpdateStatusModalOpen] = useState<boolean> 
           id={selectedHotelId}
           isView={false}
         />
+      ) : (
+        <HotelForm
+          isModalOpen={isModalOpen}
+          closeModal={closeModal}
+          isEdit={false}
+          id={selectedHotelId}
+          isView={true}
+        />
       )}
-
       <div className="mt-5 flex justify-center">
         {hotels && hotels?.totalPages > 0 && (
           <Pagination
@@ -485,32 +502,35 @@ const [isUpdateStatusModalOpen, setIsUpdateStatusModalOpen] = useState<boolean> 
 
       {isViewModalOpen && (
         <HotelForm
-          isModalOpen={true}
+          isModalOpen={isViewModalOpen}
           closeModal={closeViewModal}
           isEdit={false}
-          id={selectedHotelId}
+          id={selectedPendingHotelId}
           isView={true}
         />
       )}
 
       {isUpdateStatusModalOpen && (
-        <Modal isOpen={isUpdateStatusModalOpen} onClose={closeUpdateStatusModal} placement="top-center">
+        <Modal
+          isOpen={isUpdateStatusModalOpen}
+          onClose={closeUpdateStatusModal}
+          placement="top-center"
+        >
           <ModalContent>
             <ModalBody>
-              {
-                updatePendingStatus === "ACCEPTED"
-                 ? "Do you want to accept this hotel?"
-                  : "Do you want to reject this hotel?"
-              }
+              {updatePendingStatus === "ACCEPTED"
+                ? "Do you want to accept this hotel?"
+                : "Do you want to reject this hotel?"}
             </ModalBody>
             <ModalFooter>
               <Button onClick={closeUpdateStatusModal}>Cancel</Button>
-              <Button color={updatePendingStatus === "ACCEPTED"? "success" : "danger"} onClick={handleUpdateHotelStatus}>
-                {
-                  updatePendingStatus === "ACCEPTED"
-                   ? "Accept"
-                    : "Reject"
+              <Button
+                color={
+                  updatePendingStatus === "ACCEPTED" ? "success" : "danger"
                 }
+                onClick={handleUpdateHotelStatus}
+              >
+                {updatePendingStatus === "ACCEPTED" ? "Accept" : "Reject"}
               </Button>
             </ModalFooter>
           </ModalContent>

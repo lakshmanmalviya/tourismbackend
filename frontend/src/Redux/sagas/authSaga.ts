@@ -8,6 +8,7 @@ import {
   registerFailure,
   refreshTokenSuccess,
   logout as logoutAction,
+  refreshTokenFailure,
 } from "../slices/authSlice";
 import { registerPayload } from "@/types/auth/registerPayload";
 import { loginPayload } from "@/types/auth/loginPayload";
@@ -24,7 +25,6 @@ function* handleLogin(action: PayloadAction<loginPayload>) {
     if (response) {
       setUserIdInCookie(response.id);
     }
-
     yield put(fetchUserByIdRequest(response));
     yield call(setTokenRefreshInterval);
   } catch (error: any) {
@@ -41,7 +41,6 @@ function* handleRegister(action: PayloadAction<registerPayload>) {
     if (response) {
       setUserIdInCookie(response.id);
     }
-
     yield put(fetchUserByIdRequest(response));
     yield call(setTokenRefreshInterval);
   } catch (error: any) {
@@ -52,24 +51,34 @@ function* handleRegister(action: PayloadAction<registerPayload>) {
 }
 
 function* handleRefreshToken(): Generator {
-  yield call(api.post, "/auth/refresh-token");
-  yield put(refreshTokenSuccess());
+  try {
+    yield call(api.post, "/auth/refresh-token");
+    setTokenRefreshInterval();
+    yield put(refreshTokenSuccess());
+  } catch (error: any) {
+    yield put(refreshTokenFailure);
+  }
 }
-
 function* handleLogout() {
-  Cookies.remove("accessToken", { path: "/" });
-  Cookies.remove("refreshToken", { path: "/" });
-  removeUserIdFromCookie();
+  const accessToken = Cookies.get("accessToken");
+  const refreshToken = Cookies.get("refreshToken");
+  console.log("access token: " + accessToken);
+
+  if (accessToken || refreshToken) {
+    Cookies.remove("accessToken", { path: "/" });
+    Cookies.remove("refreshToken", { path: "/" });
+    removeUserIdFromCookie();
+  } else {
+    console.log("Cookies do not exist or are HttpOnly");
+  }
 }
 
 function* setTokenRefreshInterval(): Generator {
   while (true) {
-    console.log(" REFRESH TOKEN GETTING CALLED  ")
     yield delay(9 * 60 * 1000);
     yield call(handleRefreshToken);
   }
 }
-
 function* authSaga(): Generator {
   yield takeEvery("auth/loginStart", handleLogin);
   yield takeEvery("auth/registerStart", handleRegister);

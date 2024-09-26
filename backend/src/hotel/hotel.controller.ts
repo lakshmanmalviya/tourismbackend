@@ -18,7 +18,7 @@ import {
 } from '@nestjs/platform-express';
 import { HotelService } from './hotel.service';
 import { CreateHotelDto } from './dto/create-hotel.dto';
-import { AuthGuard } from '../auth/auth.guard';
+import { AuthGuard } from 'src/auth/auth.guard';
 import { RolesGuard } from '../role/role.guard';
 import { Roles } from '../role/roles.decorator';
 import { plainToInstance } from 'class-transformer';

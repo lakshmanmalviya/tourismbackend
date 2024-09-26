@@ -11,3 +11,7 @@ export const getUserIdFromCookie = (): string | undefined => {
 export const removeUserIdFromCookie = () => {
   Cookies.remove("userId", { path: "/" });
 };
+
+export const getRefreshTokenFromCookie = () => {
+  return Cookies.get("refreshToken");
+}

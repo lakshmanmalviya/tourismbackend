@@ -4,16 +4,16 @@ import HeritageFilter from "@/components/Heritage/HeritageFilter";
 import SearchedCard from "@/components/common/SearchResultCard";
 import { searchRequest } from "../Redux/slices/searchSlice";
 import {
-    HeritageResponse,
+  HeritageResponse,
   SearchEntityType,
-  SearchResponseItem,
 } from "@/types/search/searchPayload";
 import { EntityType } from "@/types/enum/entityType.enum";
 import { useAppDispatch, useAppSelector } from "@/hooks/hook";
 import { RootState } from "@/Redux/store";
 import Pagination from "@/components/common/Pagination";
 import Image from "next/image";
-import DataNotFound from "../assets/data not found.jpeg"
+import DataNotFound from "../assets/data not found.jpeg";
+import { setPriority } from "os";
 
 const Heritage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -24,6 +24,12 @@ const Heritage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [selectedPlaceId, setSelectedPlaceId] = useState<string>("");
   const [selectedTags, setSelectedTags] = useState<string>("");
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [resetFilter, setResetFilter] = useState<boolean>(false);
+
+  useEffect(() => {
+    setResetFilter(true);
+  },[searchTerm])
 
   const handleSearch = useCallback(
     (
@@ -33,14 +39,15 @@ const Heritage: React.FC = () => {
       placeId?: string,
       tags?: string
     ) => {
+      setSearchTerm(searchTerm);
       dispatch(
         searchRequest({
           keyword: searchTerm,
           entityType,
           page,
           limit: 5,
-          placeId: selectedPlaceId,
-          tagIds: selectedTags,
+          placeId,
+          tagIds: tags,
         })
       );
     },
@@ -59,20 +66,20 @@ const Heritage: React.FC = () => {
   }, [dispatch]);
 
   useEffect(() => {
+    setResetFilter(false);
     if (searchResults?.data) {
       setValues(searchResults.data);
-    }
+    } 
   }, [searchResults]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    handleSearch("", SearchEntityType.HERITAGE, page);
+    handleSearch(searchTerm, SearchEntityType.HERITAGE, page);
   };
 
   const handleApplyFilters = (placeId: string, tags: string) => {
     setSelectedPlaceId(placeId);
-    setSelectedTags(tags);
-    handleSearch("", SearchEntityType.HERITAGE, 1, placeId, tags);
+    handleSearch(searchTerm, SearchEntityType.HERITAGE, 1, placeId, tags);
   };
 
   return (
@@ -82,7 +89,7 @@ const Heritage: React.FC = () => {
         onSearch={(term) => handleSearch(term, SearchEntityType.HERITAGE)}
       />
       <div className="bg-gray-100 flex flex-col md:flex-row justify-between pt-10 gap-6 px-10">
-        <HeritageFilter onApplyFilters={handleApplyFilters} />
+        <HeritageFilter onApplyFilters={handleApplyFilters} reset={resetFilter}/>
         <div className="flex-grow">
           <div className="flex-grow">
             {value.length > 0 ? (
@@ -99,7 +106,9 @@ const Heritage: React.FC = () => {
                 />
               ))
             ) : (
-              <div><Image src={DataNotFound} alt="result not founnd"/></div>
+              <div>
+                <Image src={DataNotFound} alt="result not founnd" />
+              </div>
             )}
           </div>
 

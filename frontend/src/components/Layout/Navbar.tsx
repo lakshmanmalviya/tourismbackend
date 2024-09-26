@@ -73,8 +73,8 @@ const Navbar = () => {
   ];
 
   return (
-    <header className="container px-10">
-      <nav className="flex items-center justify-between py-2">
+    <header className="container px-10 sm:px-0 mx-auto">
+      <nav className="flex items-center justify-between  py-2">
         <div className="flex items-center">
           <Image src={logo} alt="logo" width={50} height={50} />
           <p className="ml-3 text-xl font-bold text-gray-800">Tourism App</p>

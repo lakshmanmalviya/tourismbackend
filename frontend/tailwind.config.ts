@@ -12,7 +12,7 @@ const config: Config = {
     theme: {
       extend: {
         fontFamily: {
-          caveat: ['"Caveat"', "cursive"],
+          caveat: ['Caveat', "cursive"],
           Prata: ["Prata", "serif"],
           lora: ["Lora"],
         },
