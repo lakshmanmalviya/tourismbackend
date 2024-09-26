@@ -40,6 +40,7 @@ const Heritage: React.FC = () => {
       tags?: string
     ) => {
       setSearchTerm(searchTerm);
+      setResetFilter(true);
       dispatch(
         searchRequest({
           keyword: searchTerm,
