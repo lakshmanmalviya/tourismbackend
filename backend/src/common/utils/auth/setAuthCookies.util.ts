@@ -10,5 +10,4 @@ export const setAuthCookies = ( res: Response, accessToken: string, refreshToken
         httpOnly: false,
         sameSite: 'lax',
       });
-
 }

@@ -30,7 +30,7 @@ export class ImageController {
     if (!file) {
       throw new BadRequestException('File is required');
     }
-
+    
     try {
       const image = await this.imageService.uploadImage(file, createImageDto);
 

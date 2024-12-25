@@ -34,6 +34,7 @@ export class PlaceController {
     if (query.name) {
       return placesWithImages;
     }
+    
     console.log(' this is controller of place ', placesWithImages);
     return placesWithImages;
   }

@@ -9,20 +9,19 @@ import { authResponse } from './dto/authResponse.dto';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @Post('register')
   async register(
     @Body() registerDto: RegisterDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<authResponse> {
-      const { accessToken, refreshToken, id } =
-        await this.authService.register(registerDto);
+    const { accessToken, refreshToken, id } =
+      await this.authService.register(registerDto);
 
-      setAuthCookies(res, accessToken, refreshToken);
-      res.status(HttpStatus.CREATED);
-
-      return {id };
+    setAuthCookies(res, accessToken, refreshToken);
+    res.status(HttpStatus.CREATED);
+    return { id };
   }
 
   @Post('login')
@@ -37,7 +36,7 @@ export class AuthController {
       setAuthCookies(res, accessToken, refreshToken);
       res.status(HttpStatus.OK);
 
-      return { id}; 
+      return { id };
     } catch (error) {
       console.log('From here', error);
       res.status(error.status);

@@ -17,7 +17,7 @@ async function bootstrap() {
   app.use(cookieParser());
 
   const config = new DocumentBuilder()
-    .setTitle('Tourism Website ')
+    .setTitle('Tourism Website')
     .setDescription('API for accessing the tourism website')
     .setVersion('1.0')
     .addBearerAuth()
@@ -39,7 +39,7 @@ async function bootstrap() {
   );
 
   app.useGlobalFilters(new AllExceptionsFilter());
-
+  
   // app.useGlobalInterceptors(new CustomResponseInterceptor());
 
   app.use('/uploads', express.static('uploads'));
